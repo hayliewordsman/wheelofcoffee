@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<title>Wheel of Coffee</title>
+<link rel="icon" type="image/png" href="icon.png">
+<!--
+  Wheel of Coffee - a puzzle board game for a host and up to four contestants.
+  Written for old Android WebViews (Android 4.2 / WebKit 534): ES5 only,
+  -webkit- prefixed CSS, no flexbox, no calc(), no vh/vw units.
+-->
+<style>
+@font-face{font-family:'WOCBoard';src:url('fonts/Arimo-Bold.ttf') format('truetype');font-weight:normal;font-style:normal}
+@font-face{font-family:'WOCNum';src:url('fonts/Oswald-Bold.ttf') format('truetype');font-weight:normal;font-style:normal}
+@font-face{font-family:'WOCUi';src:url('fonts/Oswald-Medium.ttf') format('truetype');font-weight:normal;font-style:normal}
+@font-face{font-family:'WOCLogo';src:url('fonts/Lobster-Regular.ttf') format('truetype');font-weight:normal;font-style:normal}
+
+*{margin:0;padding:0;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;-webkit-tap-highlight-color:rgba(0,0,0,0)}
+html,body{width:100%;height:100%;overflow:hidden;background:#1a0d06}
+body{font-family:'WOCUi',sans-serif;color:#fff;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-text-size-adjust:none}
+input{font-family:Arial,Helvetica,sans-serif;font-size:1em;-webkit-user-select:text;user-select:text;-webkit-appearance:none;border-radius:.25em;border:.1em solid #b98a4e;background:#fff8ec;color:#2b1709;padding:.35em .45em;width:100%;outline:none}
+#app{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden}
+.screen{position:absolute;left:0;top:0;width:100%;height:100%;display:none;overflow:hidden}
+.screen.show{display:block}
+.coffee{background:#3a1d0c;background:-webkit-radial-gradient(50% 35%,ellipse cover,#86522c 0%,#4a2610 45%,#1c0c04 100%);background:radial-gradient(ellipse at 50% 35%,#86522c 0%,#4a2610 45%,#1c0c04 100%)}
+#game.bonus{background:#050302;background:-webkit-radial-gradient(50% 30%,ellipse cover,#2a170c 0%,#0c0604 55%,#000 100%);background:radial-gradient(ellipse at 50% 30%,#2a170c 0%,#0c0604 55%,#000 100%)}
+.cf:after{content:'';display:block;clear:both}
+.l{float:left}
+.r{float:right}
+
+/* ---------- puzzle board ---------- */
+#board{position:absolute}
+#frame{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:.45em;background:#2a1408;background:-webkit-linear-gradient(top,#4b2a14,#24110a);background:linear-gradient(to bottom,#4b2a14,#24110a);border:.22em solid #c8913f;box-shadow:0 0 0 .1em #5a3311,0 .3em 1em rgba(0,0,0,.6),inset 0 0 .7em rgba(0,0,0,.7)}
+#game.bonus #frame{border-color:#6e5126;background:#140a05;background:-webkit-linear-gradient(top,#22130a,#0c0604);background:linear-gradient(to bottom,#22130a,#0c0604);box-shadow:0 0 0 .1em #2a1808,0 .3em 1.2em rgba(0,0,0,.9),inset 0 0 .7em rgba(0,0,0,.8)}
+.tile{position:absolute;border-radius:.08em;overflow:hidden;text-align:center;background:#1c9a4a;background:-webkit-linear-gradient(top,#2fc062 0%,#1a9445 55%,#117334 100%);background:linear-gradient(to bottom,#2fc062 0%,#1a9445 55%,#117334 100%);box-shadow:inset 0 0 0 .03em rgba(0,0,0,.45),inset 0 .05em 0 rgba(255,255,255,.25)}
+#game.bonus .tile{background:#157a3a;background:-webkit-linear-gradient(top,#23a050 0%,#147a39 55%,#0c5a29 100%);background:linear-gradient(to bottom,#23a050 0%,#147a39 55%,#0c5a29 100%)}
+.tile.off{visibility:hidden}
+.tile.pz,#game.bonus .tile.pz{background:#f2f2ee;background:-webkit-linear-gradient(top,#ffffff,#e2e2dc);background:linear-gradient(to bottom,#ffffff,#e2e2dc)}
+.tile.lit,#game.bonus .tile.lit{background:#e2231a;background:-webkit-linear-gradient(top,#ff5a48,#cf160e);background:linear-gradient(to bottom,#ff5a48,#cf160e);box-shadow:0 0 .3em #ff3b2b,inset 0 0 0 .03em rgba(0,0,0,.4)}
+.tile.on,#game.bonus .tile.on{background:#fff;background:-webkit-linear-gradient(top,#ffffff,#ececea);background:linear-gradient(to bottom,#ffffff,#ececea)}
+.tile b{display:none;font-family:'WOCBoard',Arial,sans-serif;font-weight:normal;color:#111}
+.tile.on b{display:block}
+
+/* ---------- category bar ---------- */
+#catbar{position:absolute;text-align:center;border-radius:.25em;background:#2a1408;background:-webkit-linear-gradient(top,#4a2812,#1e0e05);background:linear-gradient(to bottom,#4a2812,#1e0e05);border:.08em solid #d9a25a;box-shadow:0 .1em .4em rgba(0,0,0,.6);color:#ffe9c2;font-family:'WOCNum',sans-serif;letter-spacing:.12em;white-space:nowrap;overflow:hidden}
+#game.bonus #catbar{border-color:#8a6a35;background:#120904}
+
+/* ---------- letter selection board ---------- */
+.key{position:absolute;text-align:center;border-radius:.16em;font-family:'WOCBoard',Arial,sans-serif;color:#3a1d0c;background:#f7ead2;background:-webkit-linear-gradient(top,#fff7e8,#e6cc9f);background:linear-gradient(to bottom,#fff7e8,#e6cc9f);box-shadow:0 .07em 0 #7a4b22,0 .12em .2em rgba(0,0,0,.45)}
+.key.v{background:#ffd56b;background:-webkit-linear-gradient(top,#ffe49a,#efb02c);background:linear-gradient(to bottom,#ffe49a,#efb02c)}
+.key.pressed{-webkit-transform:translate(0,.05em);transform:translate(0,.05em)}
+.key.used{visibility:hidden}
+
+/* ---------- side panels ---------- */
+.side{position:absolute;text-align:center;overflow:hidden}
+.logo{font-family:'WOCLogo',cursive;color:#ffe2a8;line-height:1.3;white-space:nowrap;text-shadow:0 .05em 0 #6b3a14,0 0 .3em rgba(255,190,90,.45)}
+.side .logo{font-size:1.45em;margin-bottom:.15em}
+#game.bonus .logo{color:#ffd27a}
+.sb{position:relative;height:3.6em;margin-bottom:.3em;border-radius:.35em;padding:.15em .5em;opacity:.5;border:.14em solid rgba(0,0,0,.35);overflow:hidden;text-align:left;color:#fff}
+.sb.act{opacity:1;border-color:#fff;box-shadow:0 0 .5em rgba(255,255,255,.85)}
+.red{background:#d9302a;background:-webkit-linear-gradient(top,#ef5148,#a3150f);background:linear-gradient(to bottom,#ef5148,#a3150f)}
+.yellow{background:#f5c518;background:-webkit-linear-gradient(top,#ffe066,#d39d00);background:linear-gradient(to bottom,#ffe066,#d39d00)}
+.blue{background:#2a74d6;background:-webkit-linear-gradient(top,#4a95f2,#1650a8);background:linear-gradient(to bottom,#4a95f2,#1650a8)}
+.green{background:#2fa84f;background:-webkit-linear-gradient(top,#46cc6a,#167a33);background:linear-gradient(to bottom,#46cc6a,#167a33)}
+.sb.yellow{color:#2a1a00}
+.sbName{font-size:.8em;line-height:1.25em;white-space:nowrap;overflow:hidden;margin-right:6.5em;letter-spacing:.03em}
+.sbTot{position:absolute;right:.6em;top:.35em;font-size:.62em;opacity:.9;letter-spacing:.04em}
+.sbRound{font-family:'WOCNum',sans-serif;font-size:1.6em;line-height:1.3em;text-align:center}
+#status{height:3.6em;margin-bottom:.45em;border-radius:.35em;background:rgba(0,0,0,.38);border:.12em solid rgba(255,226,168,.35);padding:.1em .3em;overflow:hidden}
+#stBig{font-family:'WOCNum',sans-serif;font-size:1.2em;line-height:1.2em;height:1.2em;color:#ffe2a8;white-space:nowrap;overflow:hidden}
+#stSmall{font-size:.7em;line-height:1.2em;color:#f3dcc0;height:2.4em;overflow:hidden}
+
+/* ---------- buttons ---------- */
+.btn{display:block;border-radius:.35em;text-align:center;font-family:'WOCNum',sans-serif;letter-spacing:.05em;color:#fff;text-shadow:0 .06em 0 rgba(0,0,0,.45);box-shadow:0 .15em 0 rgba(0,0,0,.45),inset 0 .08em 0 rgba(255,255,255,.3);white-space:nowrap;overflow:hidden;cursor:pointer}
+.btn.pressed{-webkit-transform:translate(0,.1em);transform:translate(0,.1em);box-shadow:0 .05em 0 rgba(0,0,0,.45)}
+.btn.dis{opacity:.35}
+.btn.gold{color:#3a1d00;text-shadow:0 .06em 0 rgba(255,255,255,.4);background:#f5b52e;background:-webkit-linear-gradient(top,#ffd862,#e48a08);background:linear-gradient(to bottom,#ffd862,#e48a08)}
+.btn.green{background:#2fa84f;background:-webkit-linear-gradient(top,#46cc6a,#167a33);background:linear-gradient(to bottom,#46cc6a,#167a33)}
+.btn.red{background:#d9302a;background:-webkit-linear-gradient(top,#ef5148,#a3150f);background:linear-gradient(to bottom,#ef5148,#a3150f)}
+.btn.brown{background:#6e4322;background:-webkit-linear-gradient(top,#93603a,#4e2c14);background:linear-gradient(to bottom,#93603a,#4e2c14)}
+.xl{font-size:1.5em;height:1.9em;line-height:1.9em;margin-bottom:.3em}
+.lg{font-size:1.2em;height:1.9em;line-height:1.9em;margin-bottom:.38em}
+.md{font-size:1em;height:2.3em;line-height:2.3em}
+.sm{font-size:.85em;height:2.4em;line-height:2.4em}
+.half{width:48.5%}
+
+/* portrait fallback (the APK is locked to landscape) */
+#game.port .col1{float:left;width:49%}
+#game.port .col2{float:right;width:49%}
+#game.port .side .logo{display:none}
+
+/* ---------- bonus round panel ---------- */
+#bCard{background:#120904;background:-webkit-linear-gradient(top,#2a160a,#0d0603);background:linear-gradient(to bottom,#2a160a,#0d0603);border:.14em solid #c8913f;border-radius:.45em;padding:.35em .2em .45em;margin-bottom:.45em;box-shadow:0 0 .8em rgba(0,0,0,.8)}
+#bCat{font-family:'WOCNum',sans-serif;font-size:.85em;color:#ffe2a8;letter-spacing:.08em;line-height:1.35em;height:1.35em;overflow:hidden;white-space:nowrap;margin-bottom:.25em}
+.bRow{height:2em;margin-top:.2em;white-space:nowrap}
+.ct{display:inline-block;vertical-align:top;font-family:'WOCBoard',Arial,sans-serif;font-size:1.1em;width:1.3em;height:1.65em;line-height:1.65em;margin:0 .06em;border-radius:.12em;color:#111;background:#fff;background:-webkit-linear-gradient(top,#ffffff,#e2e2dc);background:linear-gradient(to bottom,#ffffff,#e2e2dc)}
+.ct.empty{background:transparent;border:.08em dashed rgba(255,226,168,.55)}
+.plus{display:inline-block;vertical-align:top;font-family:'WOCNum',sans-serif;color:#ffe2a8;font-size:1.1em;line-height:1.65em;margin:0 .12em}
+#bTimerRow{height:3.6em;margin-bottom:.45em}
+#bTimer{float:left;width:3.6em;height:3.6em;border-radius:50%;background:#140a05;border:.18em solid #d9a25a;text-align:center;box-shadow:inset 0 0 .5em rgba(0,0,0,.8)}
+#bTimer span{display:block;font-family:'WOCNum',sans-serif;font-size:2.1em;line-height:1.54em;color:#ffe9c2}
+#bTimer.run{border-color:#ff5a48;box-shadow:0 0 .6em #ff3b2b,inset 0 0 .5em rgba(0,0,0,.8)}
+#bTimer.zero{border-color:#a3150f}
+#bTimer.zero span{color:#ff4a3a}
+#bTimer.won{border-color:#46cc6a}
+#bTimer.won span{color:#7dff9c}
+#bBtnTimer{margin:.65em 0 0 4.1em}
+
+/* ---------- wheel overlay ---------- */
+#wheelOv{position:absolute;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.8);display:none;z-index:50}
+#wheelWrap{position:absolute}
+#wheelWrap.pop{-webkit-animation:pop .3s ease-out;animation:pop .3s ease-out}
+@-webkit-keyframes pop{0%{-webkit-transform:scale(.4);opacity:0}100%{-webkit-transform:scale(1);opacity:1}}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+#wheel{position:absolute;left:0;top:0;-webkit-transform-origin:50% 50%;transform-origin:50% 50%}
+#pointer,#pointerB{position:absolute;width:0;height:0;border-style:solid;border-color:#ffd447 transparent transparent transparent}
+#pointerB{border-color:#5a3311 transparent transparent transparent}
+#wheelRes{position:absolute;font-family:'WOCNum',sans-serif;text-align:center;border-radius:.2em;display:none;white-space:nowrap;letter-spacing:.04em;box-shadow:0 0 .4em rgba(0,0,0,.8)}
+#wheelRes.val{background:#ffd447;color:#2b1709;border:.06em solid #fff}
+#wheelRes.bankrupt{background:#000;color:#fff;border:.06em solid #fff}
+#wheelRes.lose{background:#fff;color:#000;border:.06em solid #000}
+#wheelWho{position:absolute;left:0;top:0;font-family:'WOCNum',sans-serif;padding:.2em .6em;border-radius:.3em;letter-spacing:.04em}
+
+/* ---------- toast, confetti, modal ---------- */
+#toast{position:absolute;left:0;top:0;padding:.35em .9em;border-radius:.35em;background:rgba(20,10,4,.93);border:.1em solid #ffcf6b;color:#fff;font-family:'WOCNum',sans-serif;letter-spacing:.04em;text-align:center;white-space:nowrap;opacity:0;-webkit-transition:opacity .25s;transition:opacity .25s;pointer-events:none;z-index:70}
+#toast.show{opacity:1}
+#confetti{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;pointer-events:none;display:none;z-index:60}
+#confetti i{position:absolute;top:-30px;display:block;-webkit-animation-timing-function:linear;animation-timing-function:linear;-webkit-animation-fill-mode:both;animation-fill-mode:both}
+#modal{position:absolute;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.65);display:none;z-index:90}
+#mbox{position:absolute;top:2%;max-height:96%;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#2b1709;border:.15em solid #d9a25a;border-radius:.5em;padding:.7em .8em .9em;font-family:Arial,Helvetica,sans-serif;box-shadow:0 .5em 2em rgba(0,0,0,.7)}
+.mtitle{font-family:'WOCNum',sans-serif;font-size:1.3em;text-align:center;line-height:1.7em;color:#ffe2a8;white-space:nowrap;overflow:hidden}
+.mmsg{font-family:'WOCUi',sans-serif;font-size:1.15em;text-align:center;color:#ffe9c7;margin:.5em 0 1em;line-height:1.35em}
+.mb{font-size:.95em;height:2.2em;line-height:2.2em;width:6.5em}
+.mlbl{font-family:'WOCUi',sans-serif;color:#e9c99a;margin:.6em 0 .25em;font-size:.95em;letter-spacing:.04em}
+.hint{font-family:Arial,sans-serif;color:#b8956a;font-size:.85em;letter-spacing:0}
+.chips{margin-top:.4em}
+.chip{display:inline-block;font-family:'WOCUi',sans-serif;font-size:.78em;padding:.3em .65em;margin:0 .3em .35em 0;border-radius:1em;background:#5a3418;color:#ffe9c7;border:.1em solid #8a5a2c}
+.chip.pressed{background:#d9a25a;color:#2b1709}
+.tog{float:left;font-family:'WOCUi',sans-serif;font-size:.85em;padding:.4em .8em;margin:.55em .5em 0 0;border-radius:.3em;background:#4a2a12;border:.1em solid #8a5a2c;color:#ffe9c7}
+.tog.on{background:#d9a25a;color:#2b1709}
+#mErr{color:#ff9a8a;font-size:.9em;min-height:1.3em;margin:.45em 0 .25em}
+#prev{position:relative;width:100%}
+.mitem{font-size:1.15em;height:2.3em;line-height:2.3em;margin-top:.5em}
+.erow{margin:.4em 0;white-space:nowrap}
+.erow input{display:inline-block;vertical-align:middle;width:26%;margin-left:2%}
+.erow input.en{width:38%;margin-left:0}
+.ehead{font-family:'WOCUi',sans-serif;color:#e9c99a;font-size:.85em;white-space:nowrap}
+.ehead span{display:inline-block;width:26%;margin-left:2%}
+.ehead span.en{width:38%;margin-left:0}
+
+/* ---------- setup screen ---------- */
+#setup{overflow-y:auto;-webkit-overflow-scrolling:touch}
+#setupIn{margin:0 auto;padding:.6em 0 1.5em;text-align:center}
+#setupLogo{font-size:3.2em}
+.tagline{font-family:'WOCUi',sans-serif;color:#e9c99a;letter-spacing:.25em;font-size:.8em;margin:-.2em 0 .6em}
+.slbl{font-family:'WOCUi',sans-serif;color:#ffe2a8;font-size:1.05em;margin:.7em 0 .4em;letter-spacing:.05em}
+.cnt{display:inline-block;width:2.2em;height:2.2em;line-height:2.1em;margin:0 .3em;border-radius:50%;background:#4a2a12;border:.12em solid #8a5a2c;font-family:'WOCNum',sans-serif;font-size:1.2em;color:#ffe9c7}
+.cnt.sel{background:#f0b432;color:#2b1709;border-color:#fff}
+.prow{margin:.45em auto;text-align:left;width:22.8em;white-space:nowrap}
+.prow input{display:inline-block;width:11em;vertical-align:middle}
+.plbl{display:inline-block;width:1.4em;font-family:'WOCNum',sans-serif;color:#ffe2a8;vertical-align:middle}
+.sw{display:inline-block;width:2em;height:2em;border-radius:50%;margin-left:.45em;vertical-align:middle;border:.15em solid rgba(0,0,0,.4)}
+.sw.sel{border-color:#fff;box-shadow:0 0 0 .12em rgba(255,255,255,.45),0 0 .5em #fff}
+#btnStart{width:11em;margin:1em auto 0}
+#resumeWrap .btn{width:13em;margin:0 auto .3em}
+#fontLoad{position:absolute;left:-9999px;top:-9999px;visibility:hidden}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== setup screen ===== -->
+  <div id="setup" class="screen coffee scroll">
+    <div id="setupIn">
+      <div id="setupLogo" class="logo">Wheel of Coffee</div>
+      <div class="tagline">FRESHLY BREWED PUZZLES</div>
+      <div id="resumeWrap"><div id="btnResume" class="btn gold lg">RESUME SAVED GAME</div></div>
+      <div class="slbl">How many contestants?</div>
+      <div id="countRow"></div>
+      <div class="slbl">Names and colours</div>
+      <div id="pRows"></div>
+      <div id="btnStart" class="btn green xl">START GAME</div>
+    </div>
+  </div>
+
+  <!-- ===== game screen (regular rounds + bonus round) ===== -->
+  <div id="game" class="screen coffee">
+    <div id="board"><div id="frame"></div></div>
+    <div id="catbar"><span id="catText"></span></div>
+    <div id="keys"></div>
+
+    <div id="side" class="side cf"><div class="sideIn cf">
+      <div class="logo">Wheel of Coffee</div>
+      <div id="scores" class="col1"></div>
+      <div class="col2">
+        <div id="status"><div id="stBig"></div><div id="stSmall"></div></div>
+        <div id="btnSpin" class="btn gold xl">SPIN</div>
+        <div id="btnSolve" class="btn green lg">SOLVED</div>
+        <div class="cf"><div id="btnPass" class="btn brown sm half l">PASS TURN</div><div id="btnMenu" class="btn brown sm half r">MENU</div></div>
+      </div>
+    </div></div>
+
+    <div id="bside" class="side cf"><div class="sideIn cf">
+      <div class="logo">Bonus Round</div>
+      <div class="col1">
+        <div id="bCard">
+          <div id="bCat"></div>
+          <div class="bRow"><span class="ct">R</span><span class="ct">S</span><span class="ct">T</span><span class="ct">L</span><span class="ct">N</span><span class="ct">E</span></div>
+          <div class="bRow" id="bPick"></div>
+        </div>
+      </div>
+      <div class="col2">
+        <div id="bBtnRst" class="btn red lg">R S T L N E</div>
+        <div id="bBtnRev" class="btn gold lg">REVEAL LETTERS</div>
+        <div id="bTimerRow"><div id="bTimer"><span>10</span></div><div id="bBtnTimer" class="btn brown md">START TIMER</div></div>
+        <div id="bBtnSolve" class="btn green xl">SOLVED</div>
+        <div class="cf"><div id="bBtnLoad" class="btn brown sm half l">LOAD PUZZLE</div><div id="bBtnMenu" class="btn brown sm half r">MENU</div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ===== overlays ===== -->
+  <div id="wheelOv">
+    <div id="wheelWho"></div>
+    <div id="wheelWrap"><canvas id="wheel" width="10" height="10"></canvas><div id="pointerB"></div><div id="pointer"></div></div>
+    <div id="wheelRes"></div>
+  </div>
+  <div id="confetti"></div>
+  <div id="toast"></div>
+  <div id="modal"><div id="mbox" class="scroll"><div id="prev"></div></div></div>
+  <style id="cfStyle"></style>
+  <div id="fontLoad"><span style="font-family:WOCBoard">A</span><span style="font-family:WOCNum">1</span><span style="font-family:WOCUi">a</span><span style="font-family:WOCLogo">W</span></div>
+</div>
+
+<script>
+(function () {
+
+var COLS = 14, ROWS = 4;
+var COLORS = ['red', 'yellow', 'blue', 'green'];
+var CNAME = { red: 'Red', yellow: 'Yellow', blue: 'Blue', green: 'Green' };
+var CHEX = { red: '#ef5148', yellow: '#ffd23f', blue: '#4a95f2', green: '#46cc6a' };
+var VOWELS = 'AEIOU', ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', RSTLNE = 'RSTLNE';
+var REG_ROWS = ['BCDFGHJKLMN', 'PQRSTVWXYZ', 'AEIOU'];
+var BON_ROWS = ['BCDFGHJK', 'MPQVWXYZ', 'AIOU'];
+var SPECIAL = { 5: 'bankrupt', 17: 'bankrupt', 11: 'lose', 23: 'lose' };
+var WEDGE = ['#e3342f', '#f6851f', '#f9d71c', '#38b24a', '#1f78d1', '#8e44ad', '#ec5fa3'];
+var DARK_TEXT = { '#f6851f': 1, '#f9d71c': 1 };
+var CATS = ['PHRASE', 'THING', 'THINGS', 'PLACE', 'PERSON', 'PEOPLE', 'FOOD & DRINK', 'BEFORE & AFTER',
+  'WHAT ARE YOU DOING?', 'AROUND THE HOUSE', 'FUN & GAMES', 'EVENT', 'SAME NAME', 'SHOW BIZ', 'TITLE',
+  'LANDMARK', 'LIVING THING', 'OCCUPATION', 'RHYME TIME', 'QUOTATION'];
+var STORE = 'wheelOfCoffee.save.v1';
+
+var S = null;            // game state (saved to localStorage)
+var busy = false;        // true while the wheel or a reveal animation is running
+var timerInt = null, timerT0 = 0;
+var wheelAngle = 0, wheelKey = '';
+var toastT = null, cfT = null;
+var M = {};              // layout metrics
+var tiles = [], keyEls = {};
+var setup = { n: 3, players: [] };
+
+/* ================= helpers ================= */
+
+function $(id) { return document.getElementById(id); }
+function setC(el, c, on) { if (on) el.classList.add(c); else el.classList.remove(c); }
+function px(n) { return Math.round(n) + 'px'; }
+function fmt(n) {
+  n = Math.round(n);
+  var s = String(Math.abs(n)), o = '';
+  while (s.length > 3) { o = ',' + s.slice(-3) + o; s = s.slice(0, -3); }
+  return (n < 0 ? '-' : '') + s + o;
+}
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function isVowel(c) { return VOWELS.indexOf(c) >= 0; }
+function isCons(c) { return ALPHA.indexOf(c) >= 0 && VOWELS.indexOf(c) < 0; }
+function mod(a, n) { return ((a % n) + n) % n; }
+
+// Fast, reliable taps on old Android (avoids the 300ms click delay and ghost clicks).
+function tap(el, fn) {
+  var sx = 0, sy = 0, moved = false, touched = false;
+  function release() { setTimeout(function () { touched = false; }, 700); }
+  el.addEventListener('touchstart', function (e) {
+    var t = e.touches[0]; sx = t.clientX; sy = t.clientY; moved = false; touched = true;
+    el.classList.add('pressed');
+  }, false);
+  el.addEventListener('touchmove', function (e) {
+    var t = e.touches[0];
+    if (Math.abs(t.clientX - sx) > 14 || Math.abs(t.clientY - sy) > 14) { moved = true; el.classList.remove('pressed'); }
+  }, false);
+  el.addEventListener('touchcancel', function () { moved = true; el.classList.remove('pressed'); release(); }, false);
+  el.addEventListener('touchend', function (e) {
+    el.classList.remove('pressed');
+    if (!moved) { if (e.cancelable) e.preventDefault(); fn.call(el, e); }
+    release();
+  }, false);
+  el.addEventListener('click', function (e) { if (touched) return; fn.call(el, e); }, false);
+}
+
+/* ================= puzzle layout ================= */
+
+var PLACEMENTS = { 1: [[1]], 2: [[1, 2]], 3: [[0, 1, 2], [1, 2, 3]], 4: [[0, 1, 2, 3]] };
+function rowCap(r) { return (r === 0 || r === 3) ? 12 : 14; }
+
+function lineScore(lines) {
+  var mx = 0, sum = 0, v = 0, i, mean;
+  for (i = 0; i < lines.length; i++) { mx = Math.max(mx, lines[i].length); sum += lines[i].length; }
+  mean = sum / lines.length;
+  for (i = 0; i < lines.length; i++) v += (lines[i].length - mean) * (lines[i].length - mean);
+  return mx * 1000 + v;
+}
+
+// Best way to split the words into contiguous lines that fit the row capacities.
+function bestSplit(words, caps) {
+  var n = caps.length, best = null;
+  function rec(start, li, acc) {
+    var end, line;
+    if (li === n - 1) {
+      line = words.slice(start).join(' ');
+      if (!line || line.length > caps[li]) return;
+      var lines = acc.concat([line]), sc = lineScore(lines);
+      if (!best || sc < best.score) best = { lines: lines, score: sc };
+      return;
+    }
+    for (end = start + 1; end <= words.length - (n - 1 - li); end++) {
+      line = words.slice(start, end).join(' ');
+      if (line.length > caps[li]) break;
+      rec(end, li + 1, acc.concat([line]));
+    }
+  }
+  rec(0, 0, []);
+  return best;
+}
+
+function splitPuzzle(raw) {
+  var text = String(raw || '').toUpperCase().replace(/[\r\n]+/g, '/').replace(/\t/g, ' ');
+  var i, j, k, lines, rows, opts, caps, ok, b;
+  if (text.indexOf('/') >= 0) {
+    var parts = text.split('/');
+    lines = [];
+    for (i = 0; i < parts.length; i++) {
+      var s = parts[i].replace(/\s+/g, ' ').replace(/^ | $/g, '');
+      if (s) lines.push(s);
+    }
+    if (!lines.length) return { error: 'Type a puzzle.' };
+    if (lines.length > 4) return { error: 'The board only has 4 rows.' };
+    opts = PLACEMENTS[lines.length];
+    for (i = 0; i < opts.length; i++) {
+      ok = true;
+      for (j = 0; j < lines.length; j++) if (lines[j].length > rowCap(opts[i][j])) ok = false;
+      if (ok) return { lines: lines, rows: opts[i] };
+    }
+    return { error: 'A line is too long. Top and bottom rows hold 12 letters, middle rows hold 14.' };
+  }
+  var words = text.replace(/\s+/g, ' ').replace(/^ | $/g, '').split(' ');
+  if (!words[0]) return { error: 'Type a puzzle.' };
+  for (i = 0; i < words.length; i++) {
+    if (words[i].length > 14) return { error: '"' + words[i] + '" is too long (14 letters max per row).' };
+  }
+  for (k = 1; k <= 4; k++) {
+    if (k === 1 && words.length > 1 && words.join(' ').length > 12) continue;
+    opts = PLACEMENTS[k]; b = null; rows = null;
+    for (i = 0; i < opts.length; i++) {
+      caps = [];
+      for (j = 0; j < opts[i].length; j++) caps.push(rowCap(opts[i][j]));
+      var r = bestSplit(words, caps);
+      if (r && (!b || r.score < b.score)) { b = r; rows = opts[i]; }
+    }
+    if (b) return { lines: b.lines, rows: rows };
+  }
+  return { error: 'That puzzle is too long for the board.' };
+}
+
+// Build a puzzle object: cells carry row/col, the character and whether it is showing.
+function buildPuzzle(raw, category, align) {
+  var sp = splitPuzzle(raw), i, j, maxLen = 0, cells = [], hasLetter = false;
+  if (sp.error) return sp;
+  for (i = 0; i < sp.lines.length; i++) maxLen = Math.max(maxLen, sp.lines[i].length);
+  var start = Math.floor((COLS - maxLen) / 2);
+  for (i = 0; i < sp.lines.length; i++) {
+    var line = sp.lines[i], row = sp.rows[i], edge = (row === 0 || row === 3);
+    var minC = edge ? 1 : 0, maxEnd = edge ? 13 : 14;
+    var col = align === 'center' ? Math.floor((COLS - line.length) / 2) : start;
+    if (col < minC) col = minC;
+    if (col + line.length > maxEnd) col = maxEnd - line.length;
+    for (j = 0; j < line.length; j++) {
+      var ch = line.charAt(j);
+      if (ch === ' ') continue;
+      var letter = ALPHA.indexOf(ch) >= 0;
+      if (letter) hasLetter = true;
+      cells.push({ r: row, c: col + j, ch: ch, s: !letter });
+    }
+  }
+  if (!hasLetter) return { error: 'The puzzle needs at least one letter.' };
+  return {
+    category: String(category || '').toUpperCase().replace(/\s+/g, ' ').replace(/^ | $/g, ''),
+    cells: cells, used: {}, solved: false, align: align || 'left'
+  };
+}
+
+function hiddenCells(p, test) {
+  var out = [], i, c;
+  for (i = 0; i < p.cells.length; i++) { c = p.cells[i]; if (!c.s && test(c.ch)) out.push(c); }
+  return out;
+}
+function hasHidden(p, test) { return hiddenCells(p, test).length > 0; }
+function anyLetter() { return true; }
+
+/* ================= state ================= */
+
+function makeWheel() {
+  var a = [], i;
+  for (i = 0; i < 24; i++) a.push(SPECIAL[i] ? 0 : 100 + 50 * Math.floor(Math.random() * 18));
+  return a;
+}
+function newState(players) {
+  return { players: players, cur: 0, starter: 0, mode: 'reg', reg: null, bonus: null, pending: null, wheel: makeWheel() };
+}
+function save() { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} }
+function loadSaved() {
+  try {
+    var s = localStorage.getItem(STORE);
+    if (!s) return null;
+    var o = JSON.parse(s);
+    if (o && o.players && o.players.length) return o;
+  } catch (e) {}
+  return null;
+}
+function P() { return S ? (S.mode === 'bonus' ? S.bonus : S.reg) : null; }
+
+/* ================= DOM construction ================= */
+
+function buildBoard() {
+  var board = $('board'), r, c, t;
+  for (r = 0; r < ROWS; r++) {
+    for (c = 0; c < COLS; c++) {
+      t = document.createElement('div');
+      t.appendChild(document.createElement('b'));
+      board.appendChild(t);
+      tiles.push(t);
+    }
+  }
+}
+function isCorner(i) { var r = Math.floor(i / COLS), c = i % COLS; return (r === 0 || r === 3) && (c === 0 || c === 13); }
+
+function buildKeys() {
+  var box = $('keys'), i, L, k;
+  for (i = 0; i < ALPHA.length; i++) {
+    L = ALPHA.charAt(i);
+    k = document.createElement('div');
+    k.className = 'key' + (isVowel(L) ? ' v' : '');
+    k.textContent = L;
+    box.appendChild(k);
+    keyEls[L] = k;
+    bindKey(k, L);
+  }
+}
+function bindKey(k, L) { tap(k, function () { onKey(L); }); }
+
+/* ================= rendering ================= */
+
+function tileState(cell, st) {
+  var t = tiles[cell.r * COLS + cell.c];
+  t.className = 'tile pz' + (st === 'lit' ? ' lit' : st === 'on' ? ' on' : '');
+}
+
+function renderBoard() {
+  var p = P(), i, c;
+  for (i = 0; i < tiles.length; i++) {
+    tiles[i].className = isCorner(i) ? 'tile off' : 'tile';
+    tiles[i].firstChild.textContent = '';
+  }
+  if (!p) return;
+  for (i = 0; i < p.cells.length; i++) {
+    c = p.cells[i];
+    tiles[c.r * COLS + c.c].firstChild.textContent = c.ch;
+    tileState(c, c.s ? 'on' : 'pz');
+  }
+}
+
+function renderKeys() {
+  var p = P(), rows = (S && S.mode === 'bonus') ? BON_ROWS : REG_ROWS, all = rows.join(''), i, L;
+  for (i = 0; i < ALPHA.length; i++) {
+    L = ALPHA.charAt(i);
+    keyEls[L].style.display = all.indexOf(L) >= 0 ? 'block' : 'none';
+    setC(keyEls[L], 'used', !!(p && p.used[L]));
+  }
+}
+
+function renderCat() { var p = P(); $('catText').textContent = p ? p.category : ''; }
+
+function renderScores() {
+  var h = '', i, p, box = $('scores'), els;
+  for (i = 0; i < S.players.length; i++) {
+    p = S.players[i];
+    h += '<div class="sb ' + p.color + (i === S.cur ? ' act' : '') + '" data-i="' + i + '">' +
+      '<div class="sbName">' + esc(p.name) + '</div>' +
+      '<div class="sbTot">TOTAL ' + fmt(p.total) + '</div>' +
+      '<div class="sbRound">' + fmt(p.round) + '</div></div>';
+  }
+  box.innerHTML = h;
+  els = box.childNodes;
+  for (i = 0; i < els.length; i++) bindScore(els[i]);
+}
+function bindScore(el) {
+  tap(el, function () {
+    if (busy) return;
+    var i = parseInt(el.getAttribute('data-i'), 10);
+    if (i === S.cur) return;
+    S.cur = i; S.pending = null; save();
+    renderScores(); updateRegUI();
+    toast(S.players[i].name + "'s turn");
+  });
+}
+
+function updateRegUI() {
+  var p = S.reg, pl = S.players[S.cur], big = '', small = '';
+  var spin = $('btnSpin'), solve = $('btnSolve');
+  var consLeft = p && hasHidden(p, isCons);
+  if (!p) {
+    spin.textContent = 'LOAD PUZZLE';
+    spin.className = 'btn gold xl' + (busy ? ' dis' : '');
+    big = 'Ready to brew'; small = 'Load a puzzle and category to start the round';
+  } else {
+    spin.textContent = 'SPIN';
+    spin.className = 'btn gold xl' + ((busy || p.solved || S.pending || !consLeft) ? ' dis' : '');
+  }
+  if (p && p.solved) {
+    solve.textContent = 'CLEAR BOARD';
+    solve.className = 'btn red lg' + (busy ? ' dis' : '');
+    big = 'Solved!'; small = 'Clear the board for the next round';
+  } else {
+    solve.textContent = 'SOLVED';
+    solve.className = 'btn green lg' + ((!p || busy) ? ' dis' : '');
+  }
+  if (p && !p.solved) {
+    if (S.pending) { big = fmt(S.pending); small = pl.name + ', pick a consonant'; }
+    else if (!consLeft) {
+      big = pl.name;
+      small = hasHidden(p, isVowel) ? 'No more consonants. Buy a vowel or solve' : 'Every letter is showing. Solve it!';
+    } else { big = pl.name; small = 'Spin, buy a vowel (200) or solve'; }
+  }
+  $('stBig').textContent = big;
+  $('stSmall').textContent = small;
+  $('stBig').style.color = (p && !p.solved && pl) ? CHEX[pl.color] : '#ffe2a8';
+  $('btnPass').className = 'btn brown sm half l' + ((busy || !p || p.solved || S.players.length < 2) ? ' dis' : '');
+}
+
+function renderBonusCard() {
+  var b = S.bonus, cons = [], vow = '', i, h = '', L, els;
+  $('bCat').textContent = b ? (b.category || 'BONUS ROUND') : 'LOAD A BONUS PUZZLE';
+  if (b) for (i = 0; i < b.picks.length; i++) { L = b.picks[i]; if (isVowel(L)) vow = L; else cons.push(L); }
+  for (i = 0; i < 3; i++) h += '<span class="ct' + (cons[i] ? '' : ' empty') + '" data-l="' + (cons[i] || '') + '">' + (cons[i] || '') + '</span>';
+  h += '<span class="plus">+</span><span class="ct' + (vow ? '' : ' empty') + '" data-l="' + vow + '">' + vow + '</span>';
+  $('bPick').innerHTML = h;
+  els = $('bPick').getElementsByTagName('span');
+  for (i = 0; i < els.length; i++) if (els[i].getAttribute('data-l')) bindUnpick(els[i]);
+}
+function bindUnpick(el) { tap(el, function () { unpick(el.getAttribute('data-l')); }); }
+
+function updateBonusUI() {
+  var b = S.bonus, fin = b && b.finished;
+  $('bBtnRst').className = 'btn red lg' + ((!b || b.rstlne || fin || busy) ? ' dis' : '');
+  $('bBtnRev').className = 'btn gold lg' + ((!b || !b.rstlne || b.revealed || !b.picks.length || fin || busy || timerInt) ? ' dis' : '');
+  $('bBtnTimer').className = 'btn brown md' + ((!b || fin || timerInt || busy) ? ' dis' : '');
+  var sv = $('bBtnSolve');
+  if (fin) { sv.textContent = 'CLEAR BOARD'; sv.className = 'btn red xl' + (busy ? ' dis' : ''); }
+  else { sv.textContent = 'SOLVED'; sv.className = 'btn green xl' + ((!b || busy) ? ' dis' : ''); }
+  if (!timerInt) {
+    if (b && b.finished) setTimerDisp(b.timeLeft || 0, b.won ? 'won' : 'zero');
+    else setTimerDisp(10, '');
+  }
+}
+
+function setTimerDisp(n, cls) {
+  var t = $('bTimer');
+  t.className = cls || '';
+  t.firstChild.textContent = n;
+}
+
+function renderAll() {
+  var bonus = S.mode === 'bonus';
+  setC($('game'), 'bonus', bonus);
+  $('side').style.display = bonus ? 'none' : 'block';
+  $('bside').style.display = bonus ? 'block' : 'none';
+  renderBoard(); renderKeys(); renderCat();
+  if (bonus) { renderBonusCard(); updateBonusUI(); }
+  else { renderScores(); updateRegUI(); }
+  layout();
+}
+
+/* ================= layout ================= */
+
+function layout() {
+  var W = window.innerWidth || document.documentElement.clientWidth || 1024;
+  var H = window.innerHeight || document.documentElement.clientHeight || 600;
+  M.W = W; M.H = H;
+
+  var sf = Math.max(12, Math.min(28, Math.round(Math.min(W, H) / 30)));
+  $('setup').style.fontSize = sf + 'px';
+  $('setupIn').style.width = px(Math.min(W - 2 * sf, sf * 26));
+
+  var mf = Math.max(13, Math.min(22, Math.round(Math.min(W, H) / 30)));
+  var mw = Math.min(W * 0.95, mf * 34), mb = $('mbox');
+  $('modal').style.fontSize = mf + 'px';
+  mb.style.width = px(mw);
+  mb.style.left = px((W - mw) / 2);
+  if (modalOpen()) refreshPreview();
+
+  if (!S) return;
+  var land = W >= H * 1.1, pad = Math.max(6, Math.round(Math.min(W, H) * 0.022));
+  var mx, my, mW, mH, sx, sy, sw, sh;
+  setC($('game'), 'port', !land);
+  if (land) {
+    sw = Math.round(Math.min(W * 0.25, H * 0.62));
+    mx = pad; my = pad; mW = W - sw - pad * 3; mH = H - pad * 2;
+    sx = W - sw - pad; sy = pad; sh = H - pad * 2;
+  } else {
+    mx = pad; my = pad; mW = W - pad * 2; mH = Math.round(H * 0.6);
+    sx = pad; sy = my + mH + pad; sw = W - pad * 2; sh = H - sy - pad;
+  }
+  layoutMain(mx, my, mW, mH);
+  layoutSide(sx, sy, sw, sh, land);
+  layoutWheel();
+}
+
+function layoutMain(x, y, w, h) {
+  var BW = 15.74, BH = 6.14;   // board size in tile-widths (14 x 4 tiles, gaps, frame)
+  var rows = S.mode === 'bonus' ? BON_ROWS : REG_ROWS;
+  var tw = Math.min(w / BW, h * 0.6 / BH), k = 0, catH = 0, gap = 0, it;
+  for (it = 0; it < 60; it++) {
+    catH = Math.max(16, tw * 0.82); gap = Math.max(4, tw * 0.28);
+    k = Math.min((h - tw * BH - catH - gap * 2) / 3.3, w / (11 * 1.15), tw * 1.4);
+    if (k >= tw * 0.8) break;
+    tw *= 0.97;
+  }
+  var bw = tw * BW, bh = tw * BH, th = tw * 1.3, g = tw * 0.08, fp = tw * 0.35, kg = k * 0.15;
+  var used = bh + gap + catH + gap + 3 * k + 2 * kg, ex = Math.max(0, h - used);
+  var by = y + ex * 0.25, cy = by + bh + gap + ex * 0.25, ky = cy + catH + gap + ex * 0.25;
+  var bx = x + (w - bw) / 2;
+
+  var board = $('board'), i, r, c, t;
+  board.style.left = px(bx); board.style.top = px(by);
+  board.style.width = px(bw); board.style.height = px(bh);
+  board.style.fontSize = tw + 'px';
+  var fs = px(th * 0.74), lh = px(th);
+  for (i = 0; i < tiles.length; i++) {
+    r = Math.floor(i / COLS); c = i % COLS; t = tiles[i];
+    t.style.left = px(fp + c * (tw + g)); t.style.top = px(fp + r * (th + g));
+    t.style.width = px(tw); t.style.height = px(th);
+    t.style.fontSize = fs; t.style.lineHeight = lh;
+  }
+
+  var cw = Math.min(w, bw * 0.62), cat = $('catbar');
+  cat.style.left = px(x + (w - cw) / 2); cat.style.top = px(cy);
+  cat.style.width = px(cw); cat.style.height = px(catH);
+  cat.style.fontSize = px(catH * 0.58); cat.style.lineHeight = px(catH * 0.98);
+
+  var ri, j, row, rw, L, el;
+  for (ri = 0; ri < rows.length; ri++) {
+    row = rows[ri];
+    rw = row.length * k + (row.length - 1) * kg;
+    for (j = 0; j < row.length; j++) {
+      L = row.charAt(j); el = keyEls[L];
+      el.style.left = px(x + (w - rw) / 2 + j * (k + kg));
+      el.style.top = px(ky + ri * (k + kg));
+      el.style.width = px(k); el.style.height = px(k);
+      el.style.fontSize = px(k * 0.62); el.style.lineHeight = px(k);
+    }
+  }
+  M.board = { x: x, y: by, w: w, h: bh };
+  M.toastFs = Math.max(14, tw * 0.72);
+}
+
+function layoutSide(sx, sy, sw, sh, land) {
+  var bonus = S.mode === 'bonus', el = bonus ? $('bside') : $('side'), n = S.players.length, u;
+  if (land) u = bonus ? Math.min(sw / 11.5, sh / 25.4) : Math.min(sw / 11.5, sh / (14.8 + n * 3.9));
+  else u = bonus ? Math.min(sw / 24, sh / 15.4) : Math.min(sw / 24, sh / Math.max(n * 3.9, 12.4));
+  u = Math.max(8, u);
+  el.style.left = px(sx); el.style.top = px(sy);
+  el.style.width = px(sw); el.style.height = px(sh);
+  el.style.fontSize = u.toFixed(2) + 'px';
+  var inner = el.firstChild;
+  inner.style.marginTop = '0px';
+  var ch = inner.offsetHeight;
+  if (ch < sh) inner.style.marginTop = px((sh - ch) / 2);
+}
+
+function layoutWheel() {
+  var W = M.W, H = M.H, D = Math.floor(Math.min(W, H) * 0.88), wrap = $('wheelWrap');
+  M.wheelD = D;
+  wrap.style.width = px(D); wrap.style.height = px(D);
+  wrap.style.left = px((W - D) / 2); wrap.style.top = px((H - D) / 2 + D * 0.025);
+  var pw = D * 0.04, ph = D * 0.085, pt = $('pointer'), pb = $('pointerB');
+  pt.style.borderWidth = px(ph) + ' ' + px(pw) + ' 0 ' + px(pw);
+  pt.style.left = px(D / 2 - pw); pt.style.top = px(-D * 0.035);
+  pb.style.borderWidth = px(ph + 6) + ' ' + px(pw + 4) + ' 0 ' + px(pw + 4);
+  pb.style.left = px(D / 2 - pw - 4); pb.style.top = px(-D * 0.035 - 3);
+  var who = $('wheelWho');
+  who.style.fontSize = px(Math.min(W, H) * 0.05);
+  who.style.left = px(Math.min(W, H) * 0.03); who.style.top = px(Math.min(W, H) * 0.03);
+  $('wheelRes').style.fontSize = px(D * 0.11);
+}
+
+/* ================= the wheel ================= */
+
+function drawWheel() {
+  var D = M.wheelD, cv = $('wheel'), dpr = Math.min(window.devicePixelRatio || 1, 2), size = Math.round(D * dpr);
+  var key = size + '|' + S.wheel.join(',');
+  if (key === wheelKey) return;
+  wheelKey = key;
+  cv.width = size; cv.height = size;
+  cv.style.width = px(D); cv.style.height = px(D);
+  var ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+  var R = D / 2, c = R, rim = R * 0.06, r = R - rim, step = Math.PI * 2 / 24, i, vi = 0, g;
+
+  ctx.beginPath(); ctx.arc(c, c, R - 1, 0, Math.PI * 2);
+  g = ctx.createRadialGradient(c, c, r * 0.98, c, c, R);
+  g.addColorStop(0, '#7a4a1c'); g.addColorStop(0.45, '#f6d27a'); g.addColorStop(1, '#8a5a20');
+  ctx.fillStyle = g; ctx.fill();
+
+  for (i = 0; i < 24; i++) {
+    var a0 = -Math.PI / 2 + i * step, a1 = a0 + step, t = SPECIAL[i], col;
+    col = t === 'bankrupt' ? '#111111' : t === 'lose' ? '#fafafa' : WEDGE[vi++ % WEDGE.length];
+    ctx.beginPath(); ctx.moveTo(c, c); ctx.arc(c, c, r, a0, a1, false); ctx.closePath();
+    ctx.fillStyle = col; ctx.fill();
+    ctx.lineWidth = Math.max(1, R * 0.008); ctx.strokeStyle = 'rgba(40,20,5,.75)'; ctx.stroke();
+
+    ctx.save();
+    ctx.translate(c, c);
+    ctx.rotate(a0 + step / 2 + Math.PI / 2);   // local "up" now points out along the wedge
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (!t) {
+      var s = String(S.wheel[i]), fs = r * 0.125, k;
+      ctx.font = Math.round(fs) + 'px WOCNum, sans-serif';
+      ctx.fillStyle = DARK_TEXT[col] ? '#2b1709' : '#ffffff';
+      for (k = 0; k < s.length; k++) ctx.fillText(s.charAt(k), 0, -r * 0.86 + k * fs * 1.02);
+    } else {
+      ctx.rotate(Math.PI / 2);                 // text runs from the rim toward the hub
+      ctx.textAlign = 'left';
+      if (t === 'bankrupt') {
+        ctx.font = Math.round(r * 0.088) + 'px WOCNum, sans-serif'; ctx.fillStyle = '#ffffff';
+        ctx.fillText('BANKRUPT', -r * 0.92, 0, r * 0.6);
+      } else {
+        ctx.font = Math.round(r * 0.072) + 'px WOCNum, sans-serif'; ctx.fillStyle = '#111111';
+        ctx.fillText('LOSE A TURN', -r * 0.92, 0, r * 0.62);
+      }
+    }
+    ctx.restore();
+  }
+
+  // pegs
+  for (i = 0; i < 24; i++) {
+    var pa = -Math.PI / 2 + i * step;
+    ctx.beginPath();
+    ctx.arc(c + Math.cos(pa) * (r - R * 0.025), c + Math.sin(pa) * (r - R * 0.025), Math.max(1.5, R * 0.014), 0, Math.PI * 2);
+    ctx.fillStyle = '#fff3cf'; ctx.fill();
+  }
+  // inner ring
+  ctx.beginPath(); ctx.arc(c, c, r, 0, Math.PI * 2);
+  ctx.lineWidth = Math.max(1, R * 0.012); ctx.strokeStyle = '#5a3311'; ctx.stroke();
+
+  // coffee hub
+  var hr = r * 0.24;
+  ctx.beginPath(); ctx.arc(c, c, hr, 0, Math.PI * 2);
+  g = ctx.createRadialGradient(c - hr * 0.3, c - hr * 0.3, hr * 0.1, c, c, hr);
+  g.addColorStop(0, '#9a6136'); g.addColorStop(0.6, '#5a3014'); g.addColorStop(1, '#2a1306');
+  ctx.fillStyle = g; ctx.fill();
+  ctx.lineWidth = Math.max(2, R * 0.025); ctx.strokeStyle = '#e8b45a'; ctx.stroke();
+  ctx.fillStyle = '#ffe9c2'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = Math.round(hr * 0.36) + 'px WOCLogo, cursive';
+  ctx.fillText('Wheel of', c, c - hr * 0.26);
+  ctx.font = Math.round(hr * 0.5) + 'px WOCLogo, cursive';
+  ctx.fillText('Coffee', c, c + hr * 0.2);
+}
+
+function setXf(el, v) { el.style.webkitTransform = v; el.style.transform = v; }
+function setTr(el, v) { el.style.webkitTransition = v ? '-webkit-transform ' + v : 'none'; el.style.transition = v ? 'transform ' + v : 'none'; }
+
+function spinWheel(cb) {
+  busy = true; updateRegUI();
+  var ov = $('wheelOv'), wrap = $('wheelWrap'), cv = $('wheel'), res = $('wheelRes'), pl = S.players[S.cur];
+  layoutWheel();
+  ov.style.display = 'block';
+  drawWheel();
+  wrap.classList.remove('pop'); void wrap.offsetWidth; wrap.classList.add('pop');
+  res.style.display = 'none';
+  var who = $('wheelWho');
+  who.textContent = pl.name + "'s spin";
+  who.className = pl.color;
+  who.style.color = pl.color === 'yellow' ? '#2a1a00' : '#fff';
+
+  var idx = Math.floor(Math.random() * 24), frac = 0.18 + Math.random() * 0.64, a = (idx + frac) * 15;
+  var spins = 5 + Math.floor(Math.random() * 3);
+  var target = wheelAngle - mod(wheelAngle, 360) + spins * 360 + mod(-a, 360);
+  if (target - wheelAngle < 4 * 360) target += 360;
+  var dur = Math.round(5200 + Math.random() * 1300), landedIdx = Math.floor(mod(-target, 360) / 15);
+  var closed = false, canClose = false;
+
+  function close() {
+    if (closed) return;
+    closed = true;
+    ov.style.display = 'none';
+    ov.onclick = null; ov.ontouchend = null;
+    busy = false;
+    cb(landedIdx);
+  }
+  function landed() {
+    var t = SPECIAL[landedIdx];
+    res.className = t ? t : 'val';
+    res.textContent = t === 'bankrupt' ? 'BANKRUPT' : t === 'lose' ? 'LOSE A TURN' : fmt(S.wheel[landedIdx]);
+    res.style.padding = '.05em .5em';
+    res.style.display = 'block';
+    res.style.left = px((M.W - res.offsetWidth) / 2);
+    res.style.top = px((M.H - res.offsetHeight) / 2 + M.wheelD * 0.025);
+    canClose = true;
+    setTimeout(close, 2200);
+  }
+  ov.onclick = function () { if (canClose) close(); };
+  ov.ontouchend = function (e) { if (canClose) { if (e.cancelable) e.preventDefault(); close(); } };
+
+  setTr(cv, '');
+  setXf(cv, 'rotate(' + wheelAngle + 'deg)');
+  setTimeout(function () {
+    setTr(cv, dur + 'ms cubic-bezier(0.12, 0.55, 0.12, 1)');
+    setXf(cv, 'rotate(' + target + 'deg)');
+    wheelAngle = target;
+    setTimeout(landed, dur + 150);
+  }, 320);
+}
+
+/* ================= reveal animation ================= */
+
+// o.gap: ms between tiles lighting up (0 = all at once), o.hold: pause while lit,
+// o.flip: ms between tiles turning white, o.noLight: skip the red stage.
+function revealSeq(cells, o, done) {
+  var i = 0, n = cells.length;
+  function flip() {
+    if (i < n) { tileState(cells[i], 'on'); i++; setTimeout(flip, o.flip); }
+    else if (done) setTimeout(done, 150);
+  }
+  if (!n) { if (o.onLit) o.onLit(); if (done) done(); return; }
+  if (o.noLight) { flip(); return; }
+  if (!o.gap) {
+    for (i = 0; i < n; i++) tileState(cells[i], 'lit');
+    i = 0;
+    if (o.onLit) o.onLit();
+    setTimeout(flip, o.hold);
+    return;
+  }
+  (function light() {
+    if (i < n) { tileState(cells[i], 'lit'); i++; setTimeout(light, o.gap); }
+    else { i = 0; if (o.onLit) o.onLit(); setTimeout(flip, o.hold); }
+  })();
+}
+
+/* ================= regular round ================= */
+
+function nextPlayer() {
+  S.cur = (S.cur + 1) % S.players.length;
+  S.pending = null;
+  save(); renderScores(); updateRegUI();
+}
+
+function onSpin() {
+  if (busy) return;
+  var p = S.reg;
+  if (!p) { openLoader(); return; }
+  if (p.solved) { toast('Clear the board first'); return; }
+  if (S.pending) { toast('Pick a consonant for ' + fmt(S.pending)); return; }
+  if (!hasHidden(p, isCons)) { toast('No more consonants'); return; }
+  spinWheel(function (idx) {
+    var pl = S.players[S.cur], t = SPECIAL[idx];
+    if (t === 'bankrupt') { pl.round = 0; toast(pl.name + ' goes Bankrupt'); nextPlayer(); }
+    else if (t === 'lose') { toast(pl.name + ' loses a turn'); nextPlayer(); }
+    else { S.pending = S.wheel[idx]; save(); updateRegUI(); }
+  });
+}
+
+function onKey(L) {
+  if (busy || !S) return;
+  var p = P();
+  if (!p) { toast('Load a puzzle first'); return; }
+  if (p.used[L]) return;
+  if (S.mode === 'bonus') { bonusPick(L); return; }
+  if (p.solved) return;
+  var pl = S.players[S.cur], vowel = isVowel(L), value = 0, i;
+  if (vowel) {
+    if (S.pending) { toast('Pick a consonant for ' + fmt(S.pending)); return; }
+    if (!hasHidden(p, isVowel)) { toast('No more vowels'); return; }
+    if (pl.round < 200) { toast('A vowel costs 200 points'); return; }
+    pl.round -= 200;
+  } else {
+    if (!S.pending) { toast('Spin the wheel first'); return; }
+    value = S.pending;
+    S.pending = null;
+  }
+  p.used[L] = true;
+  keyEls[L].classList.add('used');
+  var cells = hiddenCells(p, function (c) { return c === L; });
+  for (i = 0; i < cells.length; i++) cells[i].s = true;
+  var gain = vowel ? 0 : value * cells.length;
+  pl.round += gain;
+  save();
+  busy = true;
+  if (vowel) renderScores();
+  updateRegUI();
+
+  if (!cells.length) {
+    toast('Sorry, there is no ' + L);
+    setTimeout(function () { busy = false; nextPlayer(); }, 1300);
+    return;
+  }
+  revealSeq(cells, {
+    gap: 450, hold: 500, flip: 280,
+    onLit: function () {
+      renderScores();
+      var msg = cells.length === 1 ? 'There is one ' + L : 'There are ' + cells.length + ' ' + L + "'s";
+      if (!vowel) msg += '  +' + fmt(gain);
+      toast(msg);
+    }
+  }, function () { busy = false; updateRegUI(); });
+}
+
+function onSolve() {
+  if (busy) return;
+  var p = S.reg;
+  if (!p) { toast('Load a puzzle first'); return; }
+  if (p.solved) { clearBoard(); return; }
+  var pl = S.players[S.cur], won = pl.round, i;
+  p.solved = true;
+  S.pending = null;
+  pl.total += won;
+  var cells = hiddenCells(p, anyLetter);
+  for (i = 0; i < cells.length; i++) cells[i].s = true;
+  save();
+  busy = true;
+  renderScores(); updateRegUI();
+  confetti();
+  toast(pl.name + ' solves it!' + (won ? '  +' + fmt(won) : ''));
+  revealSeq(cells, { gap: 0, hold: 350, flip: 45 }, function () { busy = false; updateRegUI(); });
+}
+
+function resetRound() {
+  var i;
+  S.reg = null; S.pending = null;
+  for (i = 0; i < S.players.length; i++) S.players[i].round = 0;
+  S.starter = (S.starter + 1) % S.players.length;
+  S.cur = S.starter;
+  S.wheel = makeWheel();
+}
+function clearBoard() { stopConfetti(); resetRound(); save(); renderAll(); }
+
+function onPass() {
+  if (busy || !S.reg || S.reg.solved || S.players.length < 2) return;
+  nextPlayer();
+  toast(S.players[S.cur].name + "'s turn");
+}
+
+/* ================= bonus round ================= */
+
+function bonusPick(L) {
+  var b = S.bonus, i, nc = 0, nv = 0, v = isVowel(L);
+  if (b.finished || b.revealed) { toast('The letters are already in'); return; }
+  for (i = 0; i < b.picks.length; i++) { if (isVowel(b.picks[i])) nv++; else nc++; }
+  if (v && nv >= 1) { toast('Only one vowel'); return; }
+  if (!v && nc >= 3) { toast('Only three consonants'); return; }
+  b.picks.push(L);
+  b.used[L] = true;
+  keyEls[L].classList.add('used');
+  save(); renderBonusCard(); updateBonusUI();
+}
+
+function unpick(L) {
+  var b = S.bonus, i;
+  if (!b || busy || b.revealed || b.finished) return;
+  for (i = 0; i < b.picks.length; i++) if (b.picks[i] === L) { b.picks.splice(i, 1); break; }
+  b.used[L] = false;
+  keyEls[L].classList.remove('used');
+  save(); renderBonusCard(); updateBonusUI();
+}
+
+function onRstlne() {
+  if (busy) return;
+  var b = S.bonus, i;
+  if (!b) { openLoader(); return; }
+  if (b.rstlne || b.finished) return;
+  b.rstlne = true;
+  for (i = 0; i < RSTLNE.length; i++) b.used[RSTLNE.charAt(i)] = true;
+  var cells = hiddenCells(b, function (c) { return RSTLNE.indexOf(c) >= 0; });
+  for (i = 0; i < cells.length; i++) cells[i].s = true;
+  save();
+  busy = true; updateBonusUI();
+  if (!cells.length) toast('No R, S, T, L, N or E!');
+  revealSeq(cells, { gap: 0, hold: 800, flip: 110 }, function () { busy = false; updateBonusUI(); });
+}
+
+function onReveal() {
+  if (busy) return;
+  var b = S.bonus, i;
+  if (!b) { openLoader(); return; }
+  if (b.finished || b.revealed) return;
+  if (!b.rstlne) { toast('Reveal R S T L N E first'); return; }
+  if (timerInt) { toast('The clock is running'); return; }
+  if (!b.picks.length) { toast('Pick 3 consonants and a vowel'); return; }
+  b.revealed = true;
+  var picks = b.picks.join('');
+  var cells = hiddenCells(b, function (c) { return picks.indexOf(c) >= 0; });
+  for (i = 0; i < cells.length; i++) cells[i].s = true;
+  save();
+  busy = true; updateBonusUI();
+  if (!cells.length) toast('None of those letters are in the puzzle');
+  revealSeq(cells, { gap: 0, hold: 900, flip: 140 }, function () { busy = false; updateBonusUI(); });
+}
+
+function startTimer() {
+  if (busy) return;
+  var b = S.bonus;
+  if (!b) { openLoader(); return; }
+  if (b.finished || timerInt) return;
+  timerT0 = Date.now();
+  setTimerDisp(10, 'run');
+  timerInt = setInterval(tick, 100);
+  updateBonusUI();
+}
+function tick() {
+  var rem = 10 - (Date.now() - timerT0) / 1000;
+  if (rem <= 0) { stopTimer(); bonusFail(); }
+  else setTimerDisp(Math.ceil(rem), 'run');
+}
+function stopTimer() { if (timerInt) { clearInterval(timerInt); timerInt = null; } }
+
+function bonusFail() {
+  var b = S.bonus, i;
+  if (!b || b.finished) return;
+  b.finished = true; b.won = false; b.timeLeft = 0;
+  var cells = hiddenCells(b, anyLetter);
+  for (i = 0; i < cells.length; i++) cells[i].s = true;
+  save();
+  busy = true; updateBonusUI();
+  revealSeq(cells, { noLight: true, flip: 110 }, function () { busy = false; updateBonusUI(); });
+}
+
+function onBonusSolve() {
+  if (busy) return;
+  var b = S.bonus, i;
+  if (!b) { toast('Load a bonus puzzle first'); return; }
+  if (b.finished) { clearBonus(); return; }
+  var left = timerInt ? Math.max(0, Math.ceil(10 - (Date.now() - timerT0) / 1000)) : 10;
+  stopTimer();
+  b.finished = true; b.won = true; b.timeLeft = left;
+  var cells = hiddenCells(b, anyLetter);
+  for (i = 0; i < cells.length; i++) cells[i].s = true;
+  save();
+  busy = true; updateBonusUI();
+  confetti();
+  toast('Solved!');
+  revealSeq(cells, { gap: 0, hold: 350, flip: 45 }, function () { busy = false; updateBonusUI(); });
+}
+
+function clearBonus() { stopConfetti(); stopTimer(); S.bonus = null; save(); renderAll(); }
+
+function enterBonus() {
+  S.mode = 'bonus'; S.pending = null;
+  save(); renderAll();
+  if (!S.bonus) openLoader();
+}
+function exitBonus() { stopTimer(); S.mode = 'reg'; save(); renderAll(); }
+
+/* ================= toast + confetti ================= */
+
+function toast(msg) {
+  var t = $('toast'), b = M.board || { x: 0, y: 0, w: M.W, h: M.H };
+  t.textContent = msg;
+  t.style.fontSize = px(M.toastFs || 20);
+  t.style.left = '0px';
+  t.style.left = px(b.x + (b.w - t.offsetWidth) / 2);
+  t.style.top = px(b.y + (b.h - t.offsetHeight) / 2);
+  t.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(function () { t.classList.remove('show'); }, 2000);
+}
+
+function confetti() {
+  var box = $('confetti'), W = M.W, H = M.H, n = Math.min(140, Math.max(60, Math.round(W * H / 5000)));
+  var cols = ['#ffd447', '#ef5148', '#4a95f2', '#46cc6a', '#ffffff', '#ec5fa3', '#f6851f'];
+  var drift = [-70, 45, 100], css = '', h = [], v, i;
+  for (v = 0; v < 3; v++) {
+    var a = 'translate3d(0,0,0) rotate(0deg)';
+    var m = 'translate3d(' + drift[v] + 'px,' + Math.round(H * 0.5) + 'px,0) rotate(' + (360 + v * 90) + 'deg)';
+    var z = 'translate3d(' + Math.round(-drift[v] / 2) + 'px,' + Math.round(H + 60) + 'px,0) rotate(' + (720 + v * 180) + 'deg)';
+    css += '@-webkit-keyframes cf' + v + '{0%{-webkit-transform:' + a + '}50%{-webkit-transform:' + m + '}100%{-webkit-transform:' + z + '}}';
+    css += '@keyframes cf' + v + '{0%{transform:' + a + '}50%{transform:' + m + '}100%{transform:' + z + '}}';
+  }
+  $('cfStyle').textContent = css;
+  for (i = 0; i < n; i++) {
+    var w = 6 + Math.random() * 7, ht = w * (0.4 + Math.random() * 0.8);
+    var dur = (2.6 + Math.random() * 2).toFixed(2) + 's', delay = (Math.random() * 2.2).toFixed(2) + 's', name = 'cf' + (i % 3);
+    h.push('<i style="left:' + Math.round(Math.random() * W) + 'px;width:' + Math.round(w) + 'px;height:' + Math.round(ht) +
+      'px;background:' + cols[i % cols.length] +
+      ';-webkit-animation-name:' + name + ';animation-name:' + name +
+      ';-webkit-animation-duration:' + dur + ';animation-duration:' + dur +
+      ';-webkit-animation-delay:' + delay + ';animation-delay:' + delay + '"></i>');
+  }
+  box.innerHTML = h.join('');
+  box.style.display = 'block';
+  clearTimeout(cfT);
+  cfT = setTimeout(stopConfetti, 7500);
+}
+function stopConfetti() {
+  var box = $('confetti');
+  clearTimeout(cfT);
+  box.style.display = 'none';
+  box.innerHTML = '';
+}
+
+/* ================= modals ================= */
+
+function openModal(html) {
+  $('mbox').innerHTML = html;
+  $('modal').style.display = 'block';
+  $('mbox').scrollTop = 0;
+}
+function closeModal() {
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  $('modal').style.display = 'none';
+  $('mbox').innerHTML = '<div id="prev"></div>';
+}
+function modalOpen() { return $('modal').style.display === 'block'; }
+
+function confirmBox(msg, yes, fn) {
+  openModal('<div class="mmsg">' + esc(msg) + '</div>' +
+    '<div class="cf"><div id="cNo" class="btn brown lg half l">CANCEL</div><div id="cYes" class="btn red lg half r">' + yes + '</div></div>');
+  tap($('cNo'), closeModal);
+  tap($('cYes'), function () { closeModal(); fn(); });
+}
+
+var loaderState = { hide: false, align: 'left' };
+
+function openLoader() {
+  if (busy) return;
+  var bonus = S.mode === 'bonus', i, chips = '';
+  for (i = 0; i < CATS.length; i++) chips += '<span class="chip" data-c="' + esc(CATS[i]) + '">' + esc(CATS[i]) + '</span>';
+  openModal(
+    '<div class="cf"><div id="mX" class="btn brown mb l">CANCEL</div><div id="mOk" class="btn green mb r">LOAD</div>' +
+    '<div class="mtitle">' + (bonus ? 'Bonus Puzzle' : 'Load Puzzle') + '</div></div>' +
+    '<div class="mlbl">CATEGORY</div>' +
+    '<input type="text" id="inCat" maxlength="40" autocomplete="off" autocorrect="off" spellcheck="false">' +
+    '<div class="chips">' + chips + '</div>' +
+    '<div class="mlbl">PUZZLE <span class="hint">Lines wrap automatically. Type / to force a new line.</span></div>' +
+    '<input type="' + (loaderState.hide ? 'password' : 'text') + '" id="inPz" maxlength="70" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">' +
+    '<div class="cf"><div id="tHide" class="tog' + (loaderState.hide ? ' on' : '') + '">HIDE WHILE TYPING</div>' +
+    '<div id="tAlign" class="tog' + (loaderState.align === 'center' ? ' on' : '') + '">CENTER EACH LINE</div></div>' +
+    '<div id="mErr"></div><div id="prev"></div>');
+  var chipEls = $('mbox').getElementsByTagName('span');
+  for (i = 0; i < chipEls.length; i++) if (chipEls[i].className === 'chip') bindChip(chipEls[i]);
+  tap($('mX'), closeModal);
+  tap($('mOk'), function () {
+    var r = buildPuzzle($('inPz').value, $('inCat').value, loaderState.align);
+    if (r.error) { $('mErr').textContent = r.error; return; }
+    closeModal();
+    loadPuzzle(r);
+  });
+  tap($('tHide'), function () {
+    loaderState.hide = !loaderState.hide;
+    setC($('tHide'), 'on', loaderState.hide);
+    $('inPz').type = loaderState.hide ? 'password' : 'text';
+    refreshPreview();
+  });
+  tap($('tAlign'), function () {
+    loaderState.align = loaderState.align === 'center' ? 'left' : 'center';
+    setC($('tAlign'), 'on', loaderState.align === 'center');
+    refreshPreview();
+  });
+  $('inPz').addEventListener('input', refreshPreview, false);
+  $('inPz').addEventListener('keyup', refreshPreview, false);
+  refreshPreview();
+}
+function bindChip(el) { tap(el, function () { $('inCat').value = el.getAttribute('data-c'); }); }
+
+function refreshPreview() {
+  var box = $('prev'), inp = $('inPz');
+  if (!box || !inp || !modalOpen()) return;
+  var raw = inp.value, r = raw.replace(/[\s\/]/g, '') ? buildPuzzle(raw, '', loaderState.align) : null;
+  $('mErr').textContent = r && r.error ? r.error : '';
+  var w = box.offsetWidth, tw = w / 15.74, th = tw * 1.3, g = tw * 0.08, fp = tw * 0.35, h = '', i, rr, cc;
+  var map = {};
+  if (r && r.cells) for (i = 0; i < r.cells.length; i++) map[r.cells[i].r * COLS + r.cells[i].c] = r.cells[i].ch;
+  h += '<div style="position:absolute;left:0;top:0;width:' + px(w) + ';height:' + px(tw * 6.14) + ';border-radius:' + px(tw * 0.3) + ';background:#1c0d05;border:' + px(Math.max(2, tw * 0.15)) + ' solid #c8913f"></div>';
+  for (i = 0; i < 56; i++) {
+    if (isCorner(i)) continue;
+    rr = Math.floor(i / COLS); cc = i % COLS;
+    var ch = map[i], cls = 'tile';
+    if (ch !== undefined) cls += loaderState.hide ? ' pz' : ' pz on';
+    h += '<div class="' + cls + '" style="left:' + px(fp + cc * (tw + g)) + ';top:' + px(fp + rr * (th + g)) +
+      ';width:' + px(tw) + ';height:' + px(th) + ';font-size:' + px(th * 0.74) + ';line-height:' + px(th) + '"><b>' +
+      (ch !== undefined ? esc(ch) : '') + '</b></div>';
+  }
+  box.innerHTML = h;
+  box.style.height = px(tw * 6.14);
+}
+
+function loadPuzzle(p) {
+  if (S.mode === 'bonus') {
+    stopTimer();
+    p.rstlne = false; p.picks = []; p.revealed = false; p.finished = false;
+    S.bonus = p;
+  } else {
+    if (S.reg && S.reg.solved) resetRound();
+    S.reg = p; S.pending = null; S.wheel = makeWheel();
+  }
+  save(); renderAll();
+}
+
+function openMenu() {
+  if (busy) return;
+  var bonus = S.mode === 'bonus', items, i, h;
+  items = bonus ?
+    [['LOAD BONUS PUZZLE', openLoader], ['CLEAR BOARD', menuClear], ['BACK TO MAIN GAME', exitBonus], ['NEW GAME', confirmNew]] :
+    [['LOAD PUZZLE', openLoader], ['CLEAR BOARD', menuClear], ['EDIT SCORES', openScores], ['BONUS ROUND', enterBonus], ['NEW GAME', confirmNew]];
+  h = '<div class="cf"><div id="mX" class="btn brown mb r">CLOSE</div><div class="mtitle" style="text-align:left">MENU</div></div>';
+  for (i = 0; i < items.length; i++) h += '<div id="mi' + i + '" class="btn ' + (i === 0 ? 'gold' : 'brown') + ' mitem">' + items[i][0] + '</div>';
+  openModal(h);
+  tap($('mX'), closeModal);
+  for (i = 0; i < items.length; i++) bindMenu($('mi' + i), items[i][1]);
+}
+function bindMenu(el, fn) { tap(el, function () { closeModal(); fn(); }); }
+
+function menuClear() {
+  var p = P();
+  if (!p) { toast('The board is already clear'); return; }
+  var done = S.mode === 'bonus' ? p.finished : p.solved;
+  var go = S.mode === 'bonus' ? clearBonus : clearBoard;
+  if (done) go();
+  else confirmBox('Clear the board? This puzzle has not been solved yet.', 'CLEAR', go);
+}
+
+function confirmNew() {
+  confirmBox('Start a new game? All scores will be reset.', 'NEW GAME', function () {
+    stopTimer();
+    goSetup();
+  });
+}
+
+function openScores() {
+  var h = '<div class="cf"><div id="mX" class="btn brown mb l">CANCEL</div><div id="mOk" class="btn green mb r">SAVE</div><div class="mtitle">Scores</div></div>' +
+    '<div class="ehead"><span class="en">NAME</span><span>ROUND</span><span>TOTAL</span></div>', i, p;
+  for (i = 0; i < S.players.length; i++) {
+    p = S.players[i];
+    h += '<div class="erow"><input class="en ' + p.color + '" style="color:' + (p.color === 'yellow' ? '#2a1a00' : '#fff') + '" type="text" maxlength="14" id="en' + i + '" value="' + esc(p.name) + '">' +
+      '<input type="number" pattern="[0-9]*" id="er' + i + '" value="' + p.round + '">' +
+      '<input type="number" pattern="[0-9]*" id="et' + i + '" value="' + p.total + '"></div>';
+  }
+  openModal(h);
+  tap($('mX'), closeModal);
+  tap($('mOk'), function () {
+    for (var j = 0; j < S.players.length; j++) {
+      var nm = $('en' + j).value.replace(/^\s+|\s+$/g, '');
+      S.players[j].name = nm || CNAME[S.players[j].color];
+      S.players[j].round = parseInt($('er' + j).value, 10) || 0;
+      S.players[j].total = parseInt($('et' + j).value, 10) || 0;
+    }
+    closeModal(); save(); renderAll();
+  });
+}
+
+/* ================= setup screen ================= */
+
+function readSetupNames() {
+  for (var i = 0; i < setup.n; i++) {
+    var inp = $('pn' + i);
+    if (inp) setup.players[i].name = inp.value;
+  }
+}
+
+function renderSetup() {
+  var h = '', i, j, c;
+  for (i = 1; i <= 4; i++) h += '<span class="cnt' + (i === setup.n ? ' sel' : '') + '" data-n="' + i + '">' + i + '</span>';
+  $('countRow').innerHTML = h;
+  var cnts = $('countRow').childNodes;
+  for (i = 0; i < cnts.length; i++) bindCount(cnts[i]);
+
+  h = '';
+  for (i = 0; i < setup.n; i++) {
+    c = setup.players[i].color;
+    h += '<div class="prow"><span class="plbl">' + (i + 1) + '</span><input type="text" maxlength="14" id="pn' + i + '" placeholder="' + CNAME[c] +
+      '" value="' + esc(setup.players[i].name) + '">';
+    for (j = 0; j < COLORS.length; j++) {
+      h += '<span class="sw ' + COLORS[j] + (COLORS[j] === c ? ' sel' : '') + '" data-p="' + i + '" data-c="' + COLORS[j] + '"></span>';
+    }
+    h += '</div>';
+  }
+  $('pRows').innerHTML = h;
+  var sws = $('pRows').getElementsByTagName('span');
+  for (i = 0; i < sws.length; i++) if (sws[i].getAttribute('data-c')) bindSwatch(sws[i]);
+  $('resumeWrap').style.display = loadSaved() ? 'block' : 'none';
+}
+function bindCount(el) {
+  tap(el, function () { readSetupNames(); setup.n = parseInt(el.getAttribute('data-n'), 10); renderSetup(); });
+}
+function bindSwatch(el) {
+  tap(el, function () {
+    readSetupNames();
+    var i = parseInt(el.getAttribute('data-p'), 10), c = el.getAttribute('data-c'), j;
+    for (j = 0; j < setup.players.length; j++) {
+      if (j !== i && setup.players[j].color === c) setup.players[j].color = setup.players[i].color;
+    }
+    setup.players[i].color = c;
+    renderSetup();
+  });
+}
+
+function goSetup() {
+  var i, used = {};
+  setup.players = [];
+  if (S) {
+    setup.n = S.players.length;
+    for (i = 0; i < S.players.length; i++) {
+      var nm = S.players[i].name === CNAME[S.players[i].color] ? '' : S.players[i].name;
+      setup.players.push({ name: nm, color: S.players[i].color });
+      used[S.players[i].color] = 1;
+    }
+  }
+  for (i = 0; i < COLORS.length && setup.players.length < 4; i++) {
+    if (!used[COLORS[i]]) setup.players.push({ name: '', color: COLORS[i] });
+  }
+  renderSetup();
+  showScreen('setup');
+}
+
+function startGame() {
+  readSetupNames();
+  var players = [], i, p;
+  for (i = 0; i < setup.n; i++) {
+    p = setup.players[i];
+    players.push({ name: p.name.replace(/^\s+|\s+$/g, '') || CNAME[p.color], color: p.color, round: 0, total: 0 });
+  }
+  stopTimer();
+  S = newState(players);
+  save();
+  showScreen('game');
+  renderAll();
+  openLoader();
+}
+
+function resumeGame() {
+  var s = loadSaved();
+  if (!s) return;
+  S = s;
+  if (!S.wheel || S.wheel.length !== 24) S.wheel = makeWheel();
+  showScreen('game');
+  renderAll();
+}
+
+function showScreen(id) {
+  setC($('setup'), 'show', id === 'setup');
+  setC($('game'), 'show', id === 'game');
+  layout();
+}
+
+/* ================= init ================= */
+
+function init() {
+  buildBoard();
+  buildKeys();
+  tap($('btnSpin'), onSpin);
+  tap($('btnSolve'), onSolve);
+  tap($('btnPass'), onPass);
+  tap($('btnMenu'), openMenu);
+  tap($('bBtnRst'), onRstlne);
+  tap($('bBtnRev'), onReveal);
+  tap($('bBtnTimer'), startTimer);
+  tap($('bTimer'), startTimer);
+  tap($('bBtnSolve'), onBonusSolve);
+  tap($('bBtnLoad'), openLoader);
+  tap($('bBtnMenu'), openMenu);
+  tap($('btnStart'), startGame);
+  tap($('btnResume'), resumeGame);
+
+  // Stop the page from scrolling or bouncing, except inside scrollable panels.
+  document.addEventListener('touchmove', function (e) {
+    var n = e.target;
+    while (n && n !== document.body) {
+      if (n.classList && n.classList.contains('scroll')) return;
+      n = n.parentNode;
+    }
+    if (e.cancelable) e.preventDefault();
+  }, false);
+  document.addEventListener('touchstart', function () {}, false);
+
+  var rt = null;
+  function onResize() { clearTimeout(rt); rt = setTimeout(layout, 120); }
+  window.addEventListener('resize', onResize, false);
+  window.addEventListener('orientationchange', onResize, false);
+
+  S = null;
+  var saved = loadSaved();
+  if (saved) S = saved;
+  goSetup();
+  S = null;
+  setTimeout(layout, 300);
+  setTimeout(layout, 1200);
+}
+
+init();
+
+// Test hook (used by the automated checks; harmless in the app).
+window.WOC = {
+  state: function () { return S; },
+  forceSpin: function (idx) { var r = Math.random; Math.random = function () { Math.random = r; return (idx + 0.5) / 24; }; onSpin(); },
+  buildPuzzle: buildPuzzle
+};
+
+})();
+</script>
+</body>
+</html>
