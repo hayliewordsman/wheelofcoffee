@@ -20,6 +20,15 @@ choose **Resume saved game** on the start screen.
 
 ## How to play
 
+### Typing
+
+All text entry (names, categories, puzzles, scores) uses the game's own
+on-screen keyboard rather than Android's, which can freeze old WebViews. Tap a
+field to bring the keyboard up and tap **DONE** to put it away. Names capitalise
+each word automatically (**SHIFT** for anything else), puzzles and categories
+are always capitals, and score fields take digits only (the first digit
+replaces the old score). A USB or Bluetooth keyboard works too.
+
 ### Setup
 Pick 1–4 contestants, type their names, and tap a colour (red, yellow, blue,
 green) for each. Tapping a colour someone else has swaps the two.
@@ -27,8 +36,9 @@ green) for each. Tapping a colour someone else has swaps the two.
 ### Regular rounds
 - **Load Puzzle**: type the category (or tap a suggestion) and the puzzle.
   Lines wrap to the 4-row board automatically (rows 1 and 4 hold 12 letters,
-  rows 2 and 3 hold 14); type `/` to force a line break. *Hide while typing*
-  hides the answer from the audience, and *Center each line* changes the alignment.
+  rows 2 and 3 hold 14); press **NEW LINE** to force a line break. *Hide while
+  typing* hides the answer from the audience, and *Center each line* changes
+  the alignment.
   Punctuation (`' - & ? ! .`) shows on the board from the start.
 - **Spin**: the wheel pops up over everything. Wedges are random point values
   from 100 to 950 (new values each round), plus two black **Bankrupt** and two

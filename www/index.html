@@ -20,7 +20,6 @@
 *{margin:0;padding:0;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;-webkit-tap-highlight-color:rgba(0,0,0,0)}
 html,body{width:100%;height:100%;overflow:hidden;background:#1a0d06}
 body{font-family:'WOCUi',sans-serif;color:#fff;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-text-size-adjust:none}
-input{font-family:Arial,Helvetica,sans-serif;font-size:1em;-webkit-user-select:text;user-select:text;-webkit-appearance:none;border-radius:.25em;border:.1em solid #b98a4e;background:#fff8ec;color:#2b1709;padding:.35em .45em;width:100%;outline:none}
 #app{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden}
 .screen{position:absolute;left:0;top:0;width:100%;height:100%;display:none;overflow:hidden}
 .screen.show{display:block}
@@ -141,11 +140,28 @@ input{font-family:Arial,Helvetica,sans-serif;font-size:1em;-webkit-user-select:t
 .tog{float:left;font-family:'WOCUi',sans-serif;font-size:.85em;padding:.4em .8em;margin:.55em .5em 0 0;border-radius:.3em;background:#4a2a12;border:.1em solid #8a5a2c;color:#ffe9c7}
 .tog.on{background:#d9a25a;color:#2b1709}
 #mErr{color:#ff9a8a;font-size:.9em;min-height:1.3em;margin:.45em 0 .25em}
-#prev{position:relative;width:100%}
+#prev{position:relative;width:100%;max-width:24em;margin:0 auto}
 .mitem{font-size:1.15em;height:2.3em;line-height:2.3em;margin-top:.5em}
 .erow{margin:.4em 0;white-space:nowrap}
-.erow input{display:inline-block;vertical-align:middle;width:26%;margin-left:2%}
-.erow input.en{width:38%;margin-left:0}
+.erow .fld{display:inline-block;vertical-align:middle;width:26%;margin-left:2%}
+.erow .fld.en{width:38%;margin-left:0;border-left-width:.5em}
+
+/* ---------- text fields + on-screen keyboard (no system text inputs) ---------- */
+.fld{position:relative;height:2.1em;line-height:1.4em;padding:.25em .45em;border-radius:.25em;border:.1em solid #b98a4e;background:#fff8ec;color:#2b1709;font-family:Arial,Helvetica,sans-serif;font-size:1em;white-space:nowrap;overflow:hidden;cursor:text}
+.fld.focus{border-color:#ffb02e;box-shadow:0 0 0 .15em rgba(255,176,46,.55)}
+.fld span.ph{color:#a88760}
+.fld.sel span{background:#ffd27a;color:#2b1709}
+.caret{display:none;width:.1em;height:1.2em;margin-left:.06em;vertical-align:-.22em;background:currentColor;-webkit-animation:blink 1s steps(1) infinite;animation:blink 1s steps(1) infinite}
+.fld.focus .caret{display:inline-block}
+@-webkit-keyframes blink{0%{opacity:1}50%{opacity:0}100%{opacity:0}}
+@keyframes blink{0%{opacity:1}50%{opacity:0}100%{opacity:0}}
+#kb{position:absolute;left:0;bottom:0;width:100%;display:none;z-index:100;background:#1a0d06;background:-webkit-linear-gradient(top,#3a2010,#140904);background:linear-gradient(to bottom,#3a2010,#140904);border-top:.1em solid #d9a25a;box-shadow:0 -.3em 1em rgba(0,0,0,.6)}
+.kk{position:absolute;text-align:center;border-radius:.16em;color:#3a1d0c;font-family:'WOCBoard',Arial,sans-serif;white-space:nowrap;overflow:hidden;background:#f7ead2;background:-webkit-linear-gradient(top,#fff7e8,#e6cc9f);background:linear-gradient(to bottom,#fff7e8,#e6cc9f);box-shadow:0 .08em 0 #7a4b22}
+.kk.fn{font-family:'WOCNum',sans-serif;font-size:.62em;letter-spacing:.06em;color:#fff;text-shadow:0 .06em 0 rgba(0,0,0,.45);background:#6e4322;background:-webkit-linear-gradient(top,#93603a,#4e2c14);background:linear-gradient(to bottom,#93603a,#4e2c14)}
+.kk.go{background:#2fa84f;background:-webkit-linear-gradient(top,#46cc6a,#167a33);background:linear-gradient(to bottom,#46cc6a,#167a33)}
+.kk.on{color:#3a1d00;text-shadow:none;background:#f5b52e;background:-webkit-linear-gradient(top,#ffd862,#e48a08);background:linear-gradient(to bottom,#ffd862,#e48a08)}
+.kk.pressed{background:#ffd862;color:#3a1d00}
+.kk.dis{opacity:.28}
 .ehead{font-family:'WOCUi',sans-serif;color:#e9c99a;font-size:.85em;white-space:nowrap}
 .ehead span{display:inline-block;width:26%;margin-left:2%}
 .ehead span.en{width:38%;margin-left:0}
@@ -159,7 +175,7 @@ input{font-family:Arial,Helvetica,sans-serif;font-size:1em;-webkit-user-select:t
 .cnt{display:inline-block;width:2.2em;height:2.2em;line-height:2.1em;margin:0 .3em;border-radius:50%;background:#4a2a12;border:.12em solid #8a5a2c;font-family:'WOCNum',sans-serif;font-size:1.2em;color:#ffe9c7}
 .cnt.sel{background:#f0b432;color:#2b1709;border-color:#fff}
 .prow{margin:.45em auto;text-align:left;width:22.8em;white-space:nowrap}
-.prow input{display:inline-block;width:11em;vertical-align:middle}
+.prow .fld{display:inline-block;width:11em;vertical-align:middle}
 .plbl{display:inline-block;width:1.4em;font-family:'WOCNum',sans-serif;color:#ffe2a8;vertical-align:middle}
 .sw{display:inline-block;width:2em;height:2em;border-radius:50%;margin-left:.45em;vertical-align:middle;border:.15em solid rgba(0,0,0,.4)}
 .sw.sel{border-color:#fff;box-shadow:0 0 0 .12em rgba(255,255,255,.45),0 0 .5em #fff}
@@ -230,6 +246,7 @@ input{font-family:Arial,Helvetica,sans-serif;font-size:1em;-webkit-user-select:t
   <div id="confetti"></div>
   <div id="toast"></div>
   <div id="modal"><div id="mbox" class="scroll"><div id="prev"></div></div></div>
+  <div id="kb"></div>
   <style id="cfStyle"></style>
   <div id="fontLoad"><span style="font-family:WOCBoard">A</span><span style="font-family:WOCNum">1</span><span style="font-family:WOCUi">a</span><span style="font-family:WOCLogo">W</span></div>
 </div>
@@ -280,19 +297,28 @@ function isCons(c) { return ALPHA.indexOf(c) >= 0 && VOWELS.indexOf(c) < 0; }
 function mod(a, n) { return ((a % n) + n) % n; }
 
 // Fast, reliable taps on old Android (avoids the 300ms click delay and ghost clicks).
+// Each element follows its own finger, so quick two-thumb typing registers every key.
+function findTouch(list, id) {
+  for (var i = 0; i < list.length; i++) if (list[i].identifier === id) return list[i];
+  return null;
+}
 function tap(el, fn) {
-  var sx = 0, sy = 0, moved = false, touched = false;
+  var sx = 0, sy = 0, tid = null, moved = false, touched = false;
   function release() { setTimeout(function () { touched = false; }, 700); }
   el.addEventListener('touchstart', function (e) {
-    var t = e.touches[0]; sx = t.clientX; sy = t.clientY; moved = false; touched = true;
+    var t = e.changedTouches[0];
+    tid = t.identifier; sx = t.clientX; sy = t.clientY; moved = false; touched = true;
     el.classList.add('pressed');
   }, false);
   el.addEventListener('touchmove', function (e) {
-    var t = e.touches[0];
+    var t = findTouch(e.changedTouches, tid);
+    if (!t) return;
     if (Math.abs(t.clientX - sx) > 14 || Math.abs(t.clientY - sy) > 14) { moved = true; el.classList.remove('pressed'); }
   }, false);
-  el.addEventListener('touchcancel', function () { moved = true; el.classList.remove('pressed'); release(); }, false);
+  el.addEventListener('touchcancel', function () { moved = true; tid = null; el.classList.remove('pressed'); release(); }, false);
   el.addEventListener('touchend', function (e) {
+    if (!findTouch(e.changedTouches, tid)) return;
+    tid = null;
     el.classList.remove('pressed');
     if (!moved) { if (e.cancelable) e.preventDefault(); fn.call(el, e); }
     release();
@@ -609,6 +635,7 @@ function layout() {
   mb.style.width = px(mw);
   mb.style.left = px((W - mw) / 2);
   if (modalOpen()) refreshPreview();
+  if (KB.fid) { layoutKb(); kbFit(true); }
 
   if (!S) return;
   var land = W >= H * 1.1, pad = Math.max(6, Math.round(Math.min(W, H) * 0.022));
@@ -1118,17 +1145,190 @@ function stopConfetti() {
   box.innerHTML = '';
 }
 
+/* ================= text fields + on-screen keyboard ================= */
+// The game never uses system text inputs (they freeze some old Android WebViews).
+// Fields are plain divs; this keyboard types into whichever one is focused.
+
+var FIELDS = {};
+var KB = { fid: null, shift: false, fresh: false, h: 0, keys: [] };
+var KB_ROWS = [   // [code, width in key units, label]; every row is 12 units wide
+  [['1'], ['2'], ['3'], ['4'], ['5'], ['6'], ['7'], ['8'], ['9'], ['0'], ['DEL', 2, 'DELETE']],
+  [['Q'], ['W'], ['E'], ['R'], ['T'], ['Y'], ['U'], ['I'], ['O'], ['P'], ["'"], ['-']],
+  [['A'], ['S'], ['D'], ['F'], ['G'], ['H'], ['J'], ['K'], ['L'], ['&'], ['?'], ['!']],
+  [['SHIFT', 2, 'SHIFT'], ['Z'], ['X'], ['C'], ['V'], ['B'], ['N'], ['M'], [','], ['.'], [':']],
+  [['CLEAR', 2, 'CLEAR'], ['NL', 2, 'NEW LINE'], ['SPACE', 5, 'SPACE'], ['DONE', 3, 'DONE']]
+];
+
+// opts: mode 'upper' | 'name' | 'num', max, placeholder, puzzle (allows the NEW LINE key),
+// onChange(value), mask() -> true to show bullets instead of the text.
+function fieldHtml(id, cls) {
+  return '<div class="fld' + (cls ? ' ' + cls : '') + '" id="' + id + '"><span></span><i class="caret"></i></div>';
+}
+function addField(id, value, opts) {
+  FIELDS[id] = { id: id, value: String(value === undefined || value === null ? '' : value), opts: opts };
+}
+function bindFields() {
+  var id, el;
+  for (id in FIELDS) {
+    el = $(id);
+    if (!el) { delete FIELDS[id]; continue; }
+    if (!el.getAttribute('data-b')) { el.setAttribute('data-b', '1'); bindField(el, id); }
+    renderField(id);
+  }
+  if (KB.fid && !FIELDS[KB.fid]) kbClose();
+}
+function bindField(el, id) { tap(el, function () { kbOpen(id); }); }
+function fieldVal(id) { return FIELDS[id] ? FIELDS[id].value : ''; }
+function setFieldVal(id, v) { var f = FIELDS[id]; if (f) kbSet(f, v); }
+
+function renderField(id) {
+  var f = FIELDS[id], el = $(id);
+  if (!f || !el) return;
+  var span = el.firstChild, v = f.value, focus = KB.fid === id;
+  if (!v && !focus && f.opts.placeholder) { span.textContent = f.opts.placeholder; span.className = 'ph'; }
+  else { span.textContent = f.opts.mask && f.opts.mask() ? v.replace(/[^ \/]/g, '•') : v; span.className = ''; }
+  setC(el, 'focus', focus);
+  setC(el, 'sel', focus && KB.fresh && v !== '');
+  el.scrollLeft = 100000;   // keep the end of long text (and the cursor) in view
+}
+
+function buildKb() {
+  var kb = $('kb'), r, i, d, k;
+  for (r = 0; r < KB_ROWS.length; r++) {
+    for (i = 0; i < KB_ROWS[r].length; i++) {
+      d = KB_ROWS[r][i];
+      k = document.createElement('div');
+      k.className = 'kk' + (d[2] ? ' fn' : '') + (d[0] === 'DONE' ? ' go' : '');
+      k.textContent = d[2] || d[0];
+      kb.appendChild(k);
+      KB.keys.push({ el: k, code: d[0], w: d[1] || 1, row: r });
+      bindKbKey(k, d[0]);
+    }
+  }
+}
+function bindKbKey(el, code) { tap(el, function () { kbPress(code); }); }
+
+function layoutKb() {
+  var W = M.W, H = M.H, kb = $('kb'), pad = Math.max(4, Math.round(Math.min(W, H) * 0.012));
+  var gap = Math.max(3, Math.round(W * 0.005)), unit = (W - pad * 2 - gap * 11) / 12;
+  var kh = Math.round(Math.min(unit * 0.85, H * 0.078)), x = 0, y = 0, row = -1, i, key, w;
+  KB.h = pad * 2 + kh * 5 + gap * 4;
+  kb.style.height = px(KB.h);
+  kb.style.fontSize = px(kh * 0.5);
+  for (i = 0; i < KB.keys.length; i++) {
+    key = KB.keys[i];
+    if (key.row !== row) { row = key.row; x = pad; y = pad + row * (kh + gap); }
+    w = unit * key.w + gap * (key.w - 1);
+    key.el.style.left = px(x); key.el.style.top = px(y);
+    key.el.style.width = px(w); key.el.style.height = px(kh);
+    key.el.style.lineHeight = px(kh);
+    x += w + gap;
+  }
+}
+
+function kbAllowed(f, ch) {
+  var m = f.opts.mode;
+  if (m === 'num') return /[0-9]/.test(ch);
+  if (ch === '/') return !!f.opts.puzzle;
+  if (m === 'name') return /[A-Z0-9 '\-&.]/.test(ch);
+  return /[A-Z0-9 '\-&?!,.:]/.test(ch);
+}
+function autoShift(v) { return v === '' || v.charAt(v.length - 1) === ' '; }
+
+// Update key labels (lower case for names) and dim keys this field can't use.
+function kbRefresh() {
+  var f = FIELDS[KB.fid], lower, i, key, c, ok;
+  if (!f) return;
+  lower = f.opts.mode === 'name' && !KB.shift;
+  for (i = 0; i < KB.keys.length; i++) {
+    key = KB.keys[i]; c = key.code;
+    if (c.length === 1) { key.el.textContent = lower ? c.toLowerCase() : c; ok = kbAllowed(f, c); }
+    else if (c === 'SHIFT') { ok = f.opts.mode === 'name'; setC(key.el, 'on', ok && KB.shift); }
+    else if (c === 'NL') ok = !!f.opts.puzzle;
+    else if (c === 'SPACE') ok = f.opts.mode !== 'num';
+    else ok = true;
+    setC(key.el, 'dis', !ok);
+  }
+}
+
+function kbSet(f, v) {
+  f.value = v;
+  KB.fresh = false;
+  KB.shift = f.opts.mode === 'name' && autoShift(v);
+  renderField(f.id);
+  if (KB.fid === f.id) kbRefresh();
+  if (f.opts.onChange) f.opts.onChange(v);
+}
+// keepCase: from a hardware keyboard, where the typed case is already right.
+function kbInsert(ch, keepCase) {
+  var f = FIELDS[KB.fid], up = ch.toUpperCase(), v;
+  if (!f || !kbAllowed(f, up)) return;
+  if (f.opts.mode === 'name') { if (!keepCase) ch = KB.shift ? up : ch.toLowerCase(); }
+  else ch = up;
+  v = KB.fresh ? '' : f.value;     // number fields: first key replaces the old value
+  if (v.length >= f.opts.max) return;
+  kbSet(f, v + ch);
+}
+function kbPress(code) {
+  var f = FIELDS[KB.fid];
+  if (!f) return;
+  if (code === 'DONE') kbClose();
+  else if (code === 'SHIFT') { if (f.opts.mode === 'name') { KB.shift = !KB.shift; kbRefresh(); } }
+  else if (code === 'DEL') kbSet(f, f.value.slice(0, -1));
+  else if (code === 'CLEAR') kbSet(f, '');
+  else if (code === 'SPACE') kbInsert(' ');
+  else if (code === 'NL') kbInsert('/');
+  else kbInsert(code);
+}
+
+function kbOpen(id) {
+  var prev = KB.fid, f = FIELDS[id];
+  if (!f) return;
+  KB.fid = id;
+  KB.shift = f.opts.mode === 'name' && autoShift(f.value);
+  KB.fresh = f.opts.mode === 'num';
+  if (prev && prev !== id) renderField(prev);
+  $('kb').style.display = 'block';
+  layoutKb();
+  kbRefresh();
+  renderField(id);
+  kbFit(true);
+}
+function kbClose() {
+  var prev = KB.fid;
+  KB.fid = null; KB.fresh = false;
+  if (prev) renderField(prev);
+  $('kb').style.display = 'none';
+  kbFit(false);
+}
+
+// Make room for the keyboard and scroll the focused field (and its label) into view.
+function kbFit(scroll) {
+  var open = !!KB.fid, mb = $('mbox'), st = $('setup'), el, box, top;
+  mb.style.maxHeight = open ? px(M.H - KB.h - M.H * 0.035) : '96%';
+  st.style.paddingBottom = open ? px(KB.h) : '0px';
+  if (!open || !scroll) return;
+  el = $(KB.fid);
+  if (!el) return;
+  box = modalOpen() ? mb : st;
+  top = 0;
+  for (var n = el; n && n !== box; n = n.offsetParent) top += n.offsetTop;
+  box.scrollTop = Math.max(0, top - el.offsetHeight * 1.4);
+}
+
 /* ================= modals ================= */
 
 function openModal(html) {
+  kbClose();
   $('mbox').innerHTML = html;
   $('modal').style.display = 'block';
   $('mbox').scrollTop = 0;
 }
 function closeModal() {
-  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  kbClose();
   $('modal').style.display = 'none';
   $('mbox').innerHTML = '<div id="prev"></div>';
+  bindFields();
 }
 function modalOpen() { return $('modal').style.display === 'block'; }
 
@@ -1148,19 +1348,23 @@ function openLoader() {
   openModal(
     '<div class="cf"><div id="mX" class="btn brown mb l">CANCEL</div><div id="mOk" class="btn green mb r">LOAD</div>' +
     '<div class="mtitle">' + (bonus ? 'Bonus Puzzle' : 'Load Puzzle') + '</div></div>' +
-    '<div class="mlbl">CATEGORY</div>' +
-    '<input type="text" id="inCat" maxlength="40" autocomplete="off" autocorrect="off" spellcheck="false">' +
+    '<div class="mlbl">CATEGORY</div>' + fieldHtml('inCat') +
     '<div class="chips">' + chips + '</div>' +
-    '<div class="mlbl">PUZZLE <span class="hint">Lines wrap automatically. Type / to force a new line.</span></div>' +
-    '<input type="' + (loaderState.hide ? 'password' : 'text') + '" id="inPz" maxlength="70" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">' +
+    '<div class="mlbl">PUZZLE <span class="hint">Lines wrap automatically. NEW LINE forces a break.</span></div>' + fieldHtml('inPz') +
+    '<div id="mErr"></div><div id="prev"></div>' +
     '<div class="cf"><div id="tHide" class="tog' + (loaderState.hide ? ' on' : '') + '">HIDE WHILE TYPING</div>' +
-    '<div id="tAlign" class="tog' + (loaderState.align === 'center' ? ' on' : '') + '">CENTER EACH LINE</div></div>' +
-    '<div id="mErr"></div><div id="prev"></div>');
+    '<div id="tAlign" class="tog' + (loaderState.align === 'center' ? ' on' : '') + '">CENTER EACH LINE</div></div>');
+  addField('inCat', '', { mode: 'upper', max: 40, placeholder: 'Tap to type, or pick one below' });
+  addField('inPz', '', {
+    mode: 'upper', max: 70, puzzle: true, placeholder: 'Tap to type the puzzle',
+    onChange: queuePreview, mask: function () { return loaderState.hide; }
+  });
+  bindFields();
   var chipEls = $('mbox').getElementsByTagName('span');
   for (i = 0; i < chipEls.length; i++) if (chipEls[i].className === 'chip') bindChip(chipEls[i]);
   tap($('mX'), closeModal);
   tap($('mOk'), function () {
-    var r = buildPuzzle($('inPz').value, $('inCat').value, loaderState.align);
+    var r = buildPuzzle(fieldVal('inPz'), fieldVal('inCat'), loaderState.align);
     if (r.error) { $('mErr').textContent = r.error; return; }
     closeModal();
     loadPuzzle(r);
@@ -1168,7 +1372,7 @@ function openLoader() {
   tap($('tHide'), function () {
     loaderState.hide = !loaderState.hide;
     setC($('tHide'), 'on', loaderState.hide);
-    $('inPz').type = loaderState.hide ? 'password' : 'text';
+    renderField('inPz');
     refreshPreview();
   });
   tap($('tAlign'), function () {
@@ -1176,16 +1380,18 @@ function openLoader() {
     setC($('tAlign'), 'on', loaderState.align === 'center');
     refreshPreview();
   });
-  $('inPz').addEventListener('input', refreshPreview, false);
-  $('inPz').addEventListener('keyup', refreshPreview, false);
   refreshPreview();
 }
-function bindChip(el) { tap(el, function () { $('inCat').value = el.getAttribute('data-c'); }); }
+function bindChip(el) { tap(el, function () { setFieldVal('inCat', el.getAttribute('data-c')); }); }
+
+// Redraw the preview just after a key press, so fast typing stays responsive.
+var previewT = null;
+function queuePreview() { clearTimeout(previewT); previewT = setTimeout(refreshPreview, 60); }
 
 function refreshPreview() {
-  var box = $('prev'), inp = $('inPz');
-  if (!box || !inp || !modalOpen()) return;
-  var raw = inp.value, r = raw.replace(/[\s\/]/g, '') ? buildPuzzle(raw, '', loaderState.align) : null;
+  var box = $('prev');
+  if (!box || !$('inPz') || !modalOpen()) return;
+  var raw = fieldVal('inPz'), r = raw.replace(/[\s\/]/g, '') ? buildPuzzle(raw, '', loaderState.align) : null;
   $('mErr').textContent = r && r.error ? r.error : '';
   var w = box.offsetWidth, tw = w / 15.74, th = tw * 1.3, g = tw * 0.08, fp = tw * 0.35, h = '', i, rr, cc;
   var map = {};
@@ -1251,18 +1457,24 @@ function openScores() {
     '<div class="ehead"><span class="en">NAME</span><span>ROUND</span><span>TOTAL</span></div>', i, p;
   for (i = 0; i < S.players.length; i++) {
     p = S.players[i];
-    h += '<div class="erow"><input class="en ' + p.color + '" style="color:' + (p.color === 'yellow' ? '#2a1a00' : '#fff') + '" type="text" maxlength="14" id="en' + i + '" value="' + esc(p.name) + '">' +
-      '<input type="number" pattern="[0-9]*" id="er' + i + '" value="' + p.round + '">' +
-      '<input type="number" pattern="[0-9]*" id="et' + i + '" value="' + p.total + '"></div>';
+    h += '<div class="erow">' + fieldHtml('en' + i, 'en') + fieldHtml('er' + i) + fieldHtml('et' + i) + '</div>';
   }
   openModal(h);
+  for (i = 0; i < S.players.length; i++) {
+    p = S.players[i];
+    $('en' + i).style.borderLeftColor = CHEX[p.color];
+    addField('en' + i, p.name, { mode: 'name', max: 14, placeholder: CNAME[p.color] });
+    addField('er' + i, p.round, { mode: 'num', max: 7, placeholder: '0' });
+    addField('et' + i, p.total, { mode: 'num', max: 8, placeholder: '0' });
+  }
+  bindFields();
   tap($('mX'), closeModal);
   tap($('mOk'), function () {
     for (var j = 0; j < S.players.length; j++) {
-      var nm = $('en' + j).value.replace(/^\s+|\s+$/g, '');
+      var nm = fieldVal('en' + j).replace(/^\s+|\s+$/g, '');
       S.players[j].name = nm || CNAME[S.players[j].color];
-      S.players[j].round = parseInt($('er' + j).value, 10) || 0;
-      S.players[j].total = parseInt($('et' + j).value, 10) || 0;
+      S.players[j].round = parseInt(fieldVal('er' + j), 10) || 0;
+      S.players[j].total = parseInt(fieldVal('et' + j), 10) || 0;
     }
     closeModal(); save(); renderAll();
   });
@@ -1272,8 +1484,7 @@ function openScores() {
 
 function readSetupNames() {
   for (var i = 0; i < setup.n; i++) {
-    var inp = $('pn' + i);
-    if (inp) setup.players[i].name = inp.value;
+    if (FIELDS['pn' + i]) setup.players[i].name = FIELDS['pn' + i].value;
   }
 }
 
@@ -1287,14 +1498,17 @@ function renderSetup() {
   h = '';
   for (i = 0; i < setup.n; i++) {
     c = setup.players[i].color;
-    h += '<div class="prow"><span class="plbl">' + (i + 1) + '</span><input type="text" maxlength="14" id="pn' + i + '" placeholder="' + CNAME[c] +
-      '" value="' + esc(setup.players[i].name) + '">';
+    h += '<div class="prow"><span class="plbl">' + (i + 1) + '</span>' + fieldHtml('pn' + i);
     for (j = 0; j < COLORS.length; j++) {
       h += '<span class="sw ' + COLORS[j] + (COLORS[j] === c ? ' sel' : '') + '" data-p="' + i + '" data-c="' + COLORS[j] + '"></span>';
     }
     h += '</div>';
   }
   $('pRows').innerHTML = h;
+  for (i = 0; i < setup.n; i++) {
+    addField('pn' + i, setup.players[i].name, { mode: 'name', max: 14, placeholder: CNAME[setup.players[i].color] });
+  }
+  bindFields();
   var sws = $('pRows').getElementsByTagName('span');
   for (i = 0; i < sws.length; i++) if (sws[i].getAttribute('data-c')) bindSwatch(sws[i]);
   $('resumeWrap').style.display = loadSaved() ? 'block' : 'none';
@@ -1334,6 +1548,7 @@ function goSetup() {
 
 function startGame() {
   readSetupNames();
+  kbClose();
   var players = [], i, p;
   for (i = 0; i < setup.n; i++) {
     p = setup.players[i];
@@ -1367,6 +1582,7 @@ function showScreen(id) {
 function init() {
   buildBoard();
   buildKeys();
+  buildKb();
   tap($('btnSpin'), onSpin);
   tap($('btnSolve'), onSolve);
   tap($('btnPass'), onPass);
@@ -1391,6 +1607,21 @@ function init() {
     if (e.cancelable) e.preventDefault();
   }, false);
   document.addEventListener('touchstart', function () {}, false);
+
+  // A physical keyboard (desktop browser, USB keyboard) types into the focused field too.
+  document.addEventListener('keydown', function (e) {
+    if (!KB.fid) return;
+    var k = e.keyCode;
+    if (k === 8) { e.preventDefault(); kbPress('DEL'); }
+    else if (k === 13 || k === 27) { e.preventDefault(); kbPress('DONE'); }
+  }, false);
+  document.addEventListener('keypress', function (e) {
+    if (!KB.fid) return;
+    var c = e.charCode || e.which;
+    if (!c || c < 32) return;
+    e.preventDefault();
+    kbInsert(String.fromCharCode(c), true);
+  }, false);
 
   var rt = null;
   function onResize() { clearTimeout(rt); rt = setTimeout(layout, 120); }

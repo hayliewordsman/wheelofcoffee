@@ -10,16 +10,32 @@ const SP = process.argv[2], W = +process.argv[3] || 1024, H = +process.argv[4] |
   await page.goto('file://' + require('path').resolve(__dirname, '../www/index.html'));
   await page.waitForTimeout(800);
   const shot = n => page.screenshot({ path: require('path').join(SP, W + 'x' + H + '-' + n + '.png') });
+  // Types on the game's own on-screen keyboard, one key tap per character.
+  const kbType = async text => {
+    for (const ch of text) {
+      const label = ch === ' ' ? 'SPACE' : ch === '/' ? 'NEW LINE' : ch.toUpperCase();
+      const idx = await page.evaluate(l => Array.prototype.findIndex.call(document.querySelectorAll('#kb .kk'), k => k.textContent.toUpperCase() === l), label);
+      if (idx < 0) throw new Error('no key for ' + ch);
+      await page.locator('#kb .kk').nth(idx).tap();
+    }
+  };
+  const kbKey = label => page.locator('#kb .kk', { hasText: label }).first().tap();
   await shot('01-setup');
   await page.tap('.cnt[data-n="3"]');
-  await page.fill('#pn0', 'Haylie'); await page.fill('#pn1', 'Sam');
+  await page.tap('#pn0'); await kbType('Haylie');
+  await page.tap('#pn1'); await kbType('Sam');
+  await shot('02a-setup-keyboard');
+  await kbKey('DONE');
+  const names = await page.evaluate(() => [document.querySelector('#pn0').textContent, document.querySelector('#pn1').textContent]);
+  console.log('typed names', JSON.stringify(names), '(expect ["Haylie","Sam"])');
   await page.tap('#pRows .prow:nth-child(2) .sw.green');   // Sam picks green (swap)
   await shot('02-setup-filled');
   await page.tap('#btnStart'); await page.waitForTimeout(300);
   await page.tap('.chip[data-c="PHRASE"]');
-  await page.fill('#inPz', "IT'S A GREAT DAY FOR A CUP OF COFFEE");
+  await page.tap('#inPz'); await kbType("IT'S A GREAT DAY FOR A CUP OF COFFEE");
   await page.waitForTimeout(200);
   await shot('03-loader');
+  await kbKey('DONE');
   await page.tap('#mOk'); await page.waitForTimeout(300);
   await shot('04-board');
   const st = () => page.evaluate(() => JSON.parse(JSON.stringify(WOC.state())));
@@ -60,8 +76,10 @@ const SP = process.argv[2], W = +process.argv[3] || 1024, H = +process.argv[4] |
   // bonus round
   await page.tap('#btnMenu'); await page.waitForTimeout(200); await shot('15-menu');
   await page.tap('.mitem:text-is("BONUS ROUND")'); await page.waitForTimeout(300);
-  await page.tap('.chip[data-c="THING"]');
-  await page.fill('#inPz', 'ESPRESSO MACHINE');
+  await page.tap('#inCat'); await page.keyboard.type('thing');   // hardware keyboard path
+  await page.keyboard.press('Enter');
+  await page.tap('#inPz'); await kbType('ESPRESSO/MACHINE');
+  await shot('15a-bonus-loader-keyboard');
   await page.tap('#mOk'); await page.waitForTimeout(300);
   await shot('16-bonus');
   await page.tap('#bBtnRst'); await page.waitForTimeout(2500);
