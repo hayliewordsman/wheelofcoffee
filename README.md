@@ -24,10 +24,11 @@ choose **Resume saved game** on the start screen.
 
 All text entry (names, categories, puzzles, scores) uses the game's own
 on-screen keyboard rather than Android's, which can freeze old WebViews. Tap a
-field to bring the keyboard up and tap **DONE** to put it away. Names capitalise
-each word automatically (**SHIFT** for anything else), puzzles and categories
-are always capitals, and score fields take digits only (the first digit
-replaces the old score). A USB or Bluetooth keyboard works too.
+field and a typing panel opens above the keyboard, showing the field large (and,
+for puzzles, a live preview of the board). Tap **DONE** to go back. Names
+capitalise each word automatically (**SHIFT** for anything else), puzzles and
+categories are always capitals, and score fields take digits only (the first
+digit replaces the old score). A USB or Bluetooth keyboard works too.
 
 ### Setup
 Pick 1–4 contestants, type their names, and tap a colour (red, yellow, blue,
@@ -88,6 +89,7 @@ Android wrapper.
 | `dist/WheelOfCoffee.apk` | The built, signed APK |
 | `tools/make_icon.py` | Regenerates the launcher icons |
 | `tools/playtest.js` | Automated play-through in headless Chromium (Playwright) |
+| `tools/oldengine-test.js` | The same play-through in PhantomJS 1.9.8, whose WebKit is close to Android 4.2's |
 
 The game is written for the Android 4.2 WebView (WebKit 534): no flexbox,
 `calc()`, viewport units or ES2015 syntax. Everything is laid out in

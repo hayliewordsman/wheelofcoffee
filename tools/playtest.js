@@ -22,7 +22,7 @@ const SP = process.argv[2], W = +process.argv[3] || 1024, H = +process.argv[4] |
   const kbKey = label => page.locator('#kb .kk', { hasText: label }).first().tap();
   await shot('01-setup');
   await page.tap('.cnt[data-n="3"]');
-  await page.tap('#pn0'); await kbType('Haylie');
+  await page.tap('#pn0'); await kbType('Haylie'); await kbKey('DONE');
   await page.tap('#pn1'); await kbType('Sam');
   await shot('02a-setup-keyboard');
   await kbKey('DONE');
@@ -80,6 +80,7 @@ const SP = process.argv[2], W = +process.argv[3] || 1024, H = +process.argv[4] |
   await page.keyboard.press('Enter');
   await page.tap('#inPz'); await kbType('ESPRESSO/MACHINE');
   await shot('15a-bonus-loader-keyboard');
+  await kbKey('DONE');
   await page.tap('#mOk'); await page.waitForTimeout(300);
   await shot('16-bonus');
   await page.tap('#bBtnRst'); await page.waitForTimeout(2500);
